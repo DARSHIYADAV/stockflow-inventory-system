@@ -66,6 +66,11 @@ async def admin_user():
 
 
 @pytest_asyncio.fixture
+async def second_admin_user():
+    return await _make_user(UserRole.admin)
+
+
+@pytest_asyncio.fixture
 async def manager_user():
     return await _make_user(UserRole.manager)
 
