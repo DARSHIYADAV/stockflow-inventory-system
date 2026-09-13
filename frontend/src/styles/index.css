@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-bg text-gray-100;
+}
+
+::selection {
+  @apply bg-accent/30 text-white;
+}
+
+@layer components {
+  /* Surfaces */
+  .card {
+    @apply rounded-card border border-border bg-panel shadow-card;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-semibold
+      transition-all duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent px-4 py-2 text-white hover:bg-accent-hover hover:shadow-lift
+      active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply btn border border-border bg-transparent px-4 py-2 font-medium text-gray-300
+      hover:border-borderHover hover:bg-panelHover hover:text-white active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply btn border border-red-500/30 bg-transparent px-4 py-2 font-medium text-red-400
+      hover:border-red-500/50 hover:bg-red-500/10 active:scale-[0.98];
+  }
+  .btn-xs {
+    @apply btn rounded-md border border-border px-2.5 py-1 text-xs font-medium text-gray-300
+      hover:border-borderHover hover:bg-panelHover hover:text-white;
+  }
+  .btn-xs-danger {
+    @apply btn rounded-md border border-red-500/30 px-2.5 py-1 text-xs font-medium text-red-400
+      hover:border-red-500/50 hover:bg-red-500/10;
+  }
+
+  /* Form fields */
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-gray-300;
+  }
+  .input-field {
+    @apply w-full rounded-md border border-border bg-panel2 px-3 py-2 text-sm text-gray-100
+      outline-none transition-all duration-150 placeholder:text-gray-600
+      hover:border-borderHover focus:border-accent focus:shadow-glow;
+  }
+  .select-field {
+    @apply input-field appearance-none cursor-pointer;
+  }
+
+  /* Tables */
+  .table-shell {
+    @apply overflow-x-auto card;
+  }
+  .table-head-cell {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+  }
+  .row-hover {
+    @apply transition-colors duration-150 hover:bg-panelHover/70;
+  }
+  .cell {
+    @apply px-4 py-3.5 text-sm;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4
+      backdrop-blur-[2px] animate-fade-in;
+  }
+  .modal-panel {
+    @apply w-full max-w-md rounded-card border border-border bg-panel p-6 shadow-modal
+      animate-scale-in;
+  }
+
+  /* Navbar */
+  .nav-link {
+    @apply relative rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150;
+  }
+  .nav-link-active {
+    @apply bg-accent/15 text-accent;
+  }
+  .nav-link-inactive {
+    @apply text-gray-400 hover:bg-panelHover hover:text-gray-100;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    @apply card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-borderHover
+      hover:shadow-lift;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center gap-2 px-4 py-12 text-center;
+  }
+  .empty-state-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-full bg-panel2 text-lg text-gray-600;
+  }
+
+  /* Spinner */
+  .spinner {
+    @apply h-5 w-5 animate-spin rounded-full border-2 border-gray-700 border-t-accent;
+  }
+}
