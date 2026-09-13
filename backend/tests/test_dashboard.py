@@ -110,3 +110,32 @@ async def test_employee_cannot_access_dashboard(client, employee_user):
 async def test_manager_can_access_dashboard(client, manager_user):
     resp = await client.get("/dashboard/summary", headers=auth_headers(manager_user))
     assert resp.status_code == 200
+
+
+async def test_manager_dashboard_has_no_recent_activity(client, admin_user, manager_user):
+    product_id = await _create_product(client, admin_user)
+    await client.post(
+        f"/stock/{product_id}/transaction",
+        json={"change_quantity": 10},
+        headers=auth_headers(admin_user),
+    )
+
+    resp = await client.get("/dashboard/summary", headers=auth_headers(manager_user))
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["recent_activity"] == []
+    # counts still populated, just no activity feed
+    assert body["total_products"] == 1
+
+
+async def test_admin_dashboard_still_has_recent_activity(client, admin_user):
+    product_id = await _create_product(client, admin_user)
+    await client.post(
+        f"/stock/{product_id}/transaction",
+        json={"change_quantity": 10},
+        headers=auth_headers(admin_user),
+    )
+
+    resp = await client.get("/dashboard/summary", headers=auth_headers(admin_user))
+    assert resp.status_code == 200
+    assert len(resp.json()["recent_activity"]) > 0

@@ -10,7 +10,7 @@ from app.models.asset import Asset, AssetStatus
 from app.models.asset_history import AssetHistory
 from app.models.product import Product
 from app.models.stock_transaction import StockTransaction
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.dashboard import ActivityItem, DashboardSummary
 
 RECENT_ACTIVITY_LIMIT = 10
@@ -43,43 +43,48 @@ async def get_dashboard_summary(
         select(func.count()).select_from(Asset).where(Asset.status == AssetStatus.assigned)
     )
 
-    recent_transactions = (
-        await db.execute(
-            select(StockTransaction).order_by(StockTransaction.created_at.desc()).limit(RECENT_ACTIVITY_LIMIT)
-        )
-    ).scalars().all()
-    recent_asset_history = (
-        await db.execute(
-            select(AssetHistory).order_by(AssetHistory.created_at.desc()).limit(RECENT_ACTIVITY_LIMIT)
-        )
-    ).scalars().all()
+    recent_activity = []
+    if current_user.role == UserRole.admin:
+        # Manager can't view Products/stock elsewhere, so this feed (which
+        # includes stock transaction detail) is admin-only too.
+        recent_transactions = (
+            await db.execute(
+                select(StockTransaction).order_by(StockTransaction.created_at.desc()).limit(RECENT_ACTIVITY_LIMIT)
+            )
+        ).scalars().all()
+        recent_asset_history = (
+            await db.execute(
+                select(AssetHistory).order_by(AssetHistory.created_at.desc()).limit(RECENT_ACTIVITY_LIMIT)
+            )
+        ).scalars().all()
 
-    activity_items = [
-        ActivityItem(
-            type="stock_transaction",
-            id=t.id,
-            created_at=t.created_at,
-            actor_id=t.actor_id,
-            product_id=t.product_id,
-            change_quantity=t.change_quantity,
-            reason=t.reason,
-        )
-        for t in recent_transactions
-    ] + [
-        ActivityItem(
-            type="asset_history",
-            id=h.id,
-            created_at=h.created_at,
-            actor_id=h.actor_id,
-            asset_id=h.asset_id,
-            action=h.action.value,
-            employee_id=h.employee_id,
-            note=h.note,
-        )
-        for h in recent_asset_history
-    ]
+        activity_items = [
+            ActivityItem(
+                type="stock_transaction",
+                id=t.id,
+                created_at=t.created_at,
+                actor_id=t.actor_id,
+                product_id=t.product_id,
+                change_quantity=t.change_quantity,
+                reason=t.reason,
+                supplier_name=t.supplier_name,
+            )
+            for t in recent_transactions
+        ] + [
+            ActivityItem(
+                type="asset_history",
+                id=h.id,
+                created_at=h.created_at,
+                actor_id=h.actor_id,
+                asset_id=h.asset_id,
+                action=h.action.value,
+                employee_id=h.employee_id,
+                note=h.note,
+            )
+            for h in recent_asset_history
+        ]
 
-    recent_activity = heapq.nlargest(RECENT_ACTIVITY_LIMIT, activity_items, key=lambda item: item.created_at)
+        recent_activity = heapq.nlargest(RECENT_ACTIVITY_LIMIT, activity_items, key=lambda item: item.created_at)
 
     return DashboardSummary(
         total_products=total_products,

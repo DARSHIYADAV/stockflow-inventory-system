@@ -25,6 +25,7 @@ class StockTransaction(Base):
     )
     change_quantity: Mapped[int] = mapped_column(Integer, nullable=False)  # + in, - out
     reason: Mapped[str] = mapped_column(String, nullable=True)
+    supplier_name: Mapped[str] = mapped_column(String, nullable=True)
     actor_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )

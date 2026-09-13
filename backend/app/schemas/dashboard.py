@@ -20,6 +20,7 @@ class ActivityItem(BaseModel):
     product_id: UUID | None = None
     change_quantity: int | None = None
     reason: str | None = None
+    supplier_name: str | None = None
 
     # asset_history fields
     asset_id: UUID | None = None

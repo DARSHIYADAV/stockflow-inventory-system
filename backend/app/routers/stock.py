@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user, require_admin_or_manager
+from app.core.dependencies import require_admin
 from app.database import get_db
 from app.models.stock_transaction import StockTransaction
 from app.models.user import User
@@ -23,7 +23,7 @@ async def create_stock_transaction(
     product_id: UUID,
     payload: StockTransactionCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin_or_manager),
+    current_user: User = Depends(require_admin),
 ):
     await get_product_or_404(db, product_id)
 
@@ -48,6 +48,7 @@ async def create_stock_transaction(
         product_id=product_id,
         change_quantity=payload.change_quantity,
         reason=payload.reason,
+        supplier_name=payload.supplier_name,
         actor_id=current_user.id,
     )
     db.add(transaction)
@@ -60,7 +61,7 @@ async def create_stock_transaction(
 async def get_stock_history(
     product_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_admin),
 ):
     await get_product_or_404(db, product_id)
     result = await db.execute(

@@ -4,7 +4,7 @@ import uuid
 # Tests must never run against the dev database (they truncate tables between
 # runs). Point at a dedicated test database before any app module is imported,
 # since app.database creates its engine at import time from this env var.
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://stockflow:stockflow@db:5432/stockflow_test"
+os.environ["DATABASE_URL"] = "postgresql+asyncpg://stockflow:stockflow@localhost:5434/stockflow_test"
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
