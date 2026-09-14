@@ -276,3 +276,157 @@ async def test_employee_cannot_reset_any_password(client, employee_user, admin_u
         headers=auth_headers(employee_user),
     )
     assert resp.status_code == 403
+
+
+# --- PUT /users/{id} (edit name/email) ---
+
+
+async def test_admin_can_edit_user_name_and_email(client, admin_user, employee_user):
+    resp = await client.put(
+        f"/users/{employee_user.id}",
+        json={"name": "New Name", "email": "renamed@staunchsys.com"},
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["name"] == "New Name"
+    assert body["email"] == "renamed@staunchsys.com"
+
+
+async def test_edit_user_rejects_non_company_email(client, admin_user, employee_user):
+    resp = await client.put(
+        f"/users/{employee_user.id}",
+        json={"name": "New Name", "email": "outsider@gmail.com"},
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 422
+
+
+async def test_edit_user_rejects_duplicate_email(client, admin_user, employee_user):
+    create_resp = await client.post(
+        "/users",
+        json={
+            "name": "Other Employee",
+            "email": "other@staunchsys.com",
+            "password": "pass1234",
+            "role": "employee",
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert create_resp.status_code == 201
+
+    resp = await client.put(
+        f"/users/{employee_user.id}",
+        json={"name": "New Name", "email": "other@staunchsys.com"},
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 400
+
+
+async def test_edit_nonexistent_user_returns_404(client, admin_user):
+    import uuid
+
+    resp = await client.put(
+        f"/users/{uuid.uuid4()}",
+        json={"name": "Ghost", "email": "ghost@staunchsys.com"},
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 404
+
+
+async def test_manager_cannot_edit_user(client, manager_user, employee_user):
+    resp = await client.put(
+        f"/users/{employee_user.id}",
+        json={"name": "Hacked", "email": "hacked@staunchsys.com"},
+        headers=auth_headers(manager_user),
+    )
+    assert resp.status_code == 403
+
+
+# --- PUT /users/{id}/deactivate & /reactivate ---
+
+
+async def test_admin_can_deactivate_employee(client, admin_user, employee_user):
+    resp = await client.put(
+        f"/users/{employee_user.id}/deactivate", headers=auth_headers(admin_user)
+    )
+    assert resp.status_code == 200
+    assert resp.json()["is_active"] is False
+
+
+async def test_deactivated_user_cannot_log_in(client, admin_user, employee_user):
+    await client.put(f"/users/{employee_user.id}/deactivate", headers=auth_headers(admin_user))
+
+    resp = await client.post(
+        "/auth/login",
+        data={"username": employee_user.email, "password": "password123"},
+    )
+    assert resp.status_code == 401
+
+
+async def test_deactivated_user_token_stops_working(client, admin_user, employee_user):
+    headers = auth_headers(employee_user)
+    resp = await client.get("/auth/me", headers=headers)
+    assert resp.status_code == 200
+
+    await client.put(f"/users/{employee_user.id}/deactivate", headers=auth_headers(admin_user))
+
+    resp = await client.get("/auth/me", headers=headers)
+    assert resp.status_code == 401
+
+
+async def test_deactivated_user_excluded_from_assignable_list(
+    client, admin_user, manager_user, employee_user
+):
+    await client.put(f"/users/{employee_user.id}/deactivate", headers=auth_headers(admin_user))
+
+    resp = await client.get("/users/assignable", headers=auth_headers(manager_user))
+    assert resp.status_code == 200
+    ids = {u["id"] for u in resp.json()}
+    assert str(employee_user.id) not in ids
+
+
+async def test_admin_cannot_deactivate_self(client, admin_user):
+    resp = await client.put(
+        f"/users/{admin_user.id}/deactivate", headers=auth_headers(admin_user)
+    )
+    assert resp.status_code == 400
+
+
+async def test_admin_cannot_deactivate_another_admin(client, admin_user, second_admin_user):
+    resp = await client.put(
+        f"/users/{second_admin_user.id}/deactivate", headers=auth_headers(admin_user)
+    )
+    assert resp.status_code == 400
+
+
+async def test_manager_cannot_deactivate_user(client, manager_user, employee_user):
+    resp = await client.put(
+        f"/users/{employee_user.id}/deactivate", headers=auth_headers(manager_user)
+    )
+    assert resp.status_code == 403
+
+
+async def test_admin_can_reactivate_user(client, admin_user, employee_user):
+    await client.put(f"/users/{employee_user.id}/deactivate", headers=auth_headers(admin_user))
+
+    resp = await client.put(
+        f"/users/{employee_user.id}/reactivate", headers=auth_headers(admin_user)
+    )
+    assert resp.status_code == 200
+    assert resp.json()["is_active"] is True
+
+    login_resp = await client.post(
+        "/auth/login",
+        data={"username": employee_user.email, "password": "password123"},
+    )
+    assert login_resp.status_code == 200
+
+
+async def test_deactivate_nonexistent_user_returns_404(client, admin_user):
+    import uuid
+
+    resp = await client.put(
+        f"/users/{uuid.uuid4()}/deactivate", headers=auth_headers(admin_user)
+    )
+    assert resp.status_code == 404
