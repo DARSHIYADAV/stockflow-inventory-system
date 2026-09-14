@@ -3,8 +3,8 @@ import Modal from './Modal'
 
 const COMPANY_EMAIL_DOMAIN = '@staunchsys.com'
 
-export default function AddUserModal({ onClose, onSubmit, submitting, error }) {
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'employee' })
+export default function EditUserModal({ user, onClose, onSubmit, submitting, error }) {
+  const [form, setForm] = useState({ name: user.name, email: user.email })
   const [localError, setLocalError] = useState('')
 
   function handleChange(field, value) {
@@ -22,7 +22,7 @@ export default function AddUserModal({ onClose, onSubmit, submitting, error }) {
   }
 
   return (
-    <Modal title="Add User" onClose={onClose}>
+    <Modal title="Edit User" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="field-label">Name</label>
@@ -45,28 +45,6 @@ export default function AddUserModal({ onClose, onSubmit, submitting, error }) {
           />
           <p className="mt-1.5 text-xs text-ink-muted">Must be a @staunchsys.com email address.</p>
         </div>
-        <div>
-          <label className="field-label">Password</label>
-          <input
-            type="text"
-            required
-            minLength={8}
-            value={form.password}
-            onChange={(e) => handleChange('password', e.target.value)}
-            placeholder="Set their initial password"
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label className="field-label">Role</label>
-          <select value={form.role} onChange={(e) => handleChange('role', e.target.value)} className="select-field">
-            <option value="employee">employee</option>
-            <option value="manager">manager</option>
-          </select>
-          <p className="mt-1.5 text-xs text-ink-muted">
-            Admin accounts can't be created here — only manager or employee.
-          </p>
-        </div>
 
         {(localError || error) && (
           <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
@@ -79,7 +57,7 @@ export default function AddUserModal({ onClose, onSubmit, submitting, error }) {
             Cancel
           </button>
           <button type="submit" disabled={submitting} className="btn-primary">
-            {submitting ? 'Creating...' : 'Create User'}
+            {submitting ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </form>

@@ -8,18 +8,20 @@ import AssetHistoryModal from '../components/AssetHistoryModal'
 import StatusBadge from '../components/StatusBadge'
 import Spinner from '../components/Spinner'
 import EmptyState from '../components/EmptyState'
+import Pagination, { PAGE_SIZE } from '../components/Pagination'
 import { useAuth } from '../context/AuthContext'
 import { assignAsset, bulkCreateAssets, createAsset, listAssets, returnAsset } from '../api/assets'
 import { listAssignableProducts } from '../api/products'
 import { listAssignableUsers } from '../api/users'
 
-const STATUS_FILTERS = ['all', 'available', 'assigned', 'retired']
+const STATUS_FILTERS = ['all', 'available', 'assigned']
 
 export default function Assets() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const canManage = user?.role === 'admin' || user?.role === 'manager'
   const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [bulkResult, setBulkResult] = useState(null)
@@ -88,7 +90,7 @@ export default function Assets() {
   return (
     <Layout>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-amber-400">Assets</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">Assets</h1>
         {canManage && (
           <div className="flex gap-2">
             <button
@@ -111,11 +113,14 @@ export default function Assets() {
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s)}
+            onClick={() => {
+              setStatusFilter(s)
+              setPage(1)
+            }}
             className={`rounded-md border px-3 py-1.5 text-sm font-medium capitalize transition-colors duration-150 ${
               statusFilter === s
                 ? 'border-accent/40 bg-accent/15 text-accent'
-                : 'border-border text-gray-400 hover:border-borderHover hover:bg-panelHover hover:text-gray-100'
+                : 'border-border text-ink-secondary hover:border-borderHover hover:bg-panelHover hover:text-ink-primary'
             }`}
           >
             {s}
@@ -135,11 +140,11 @@ export default function Assets() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border">
               <tr>
-                <th className="table-head-cell text-amber-400/80">Asset Tag</th>
-                <th className="table-head-cell text-amber-400/80">Product</th>
-                <th className="table-head-cell text-amber-400/80">Serial</th>
-                <th className="table-head-cell text-amber-400/80">Status</th>
-                <th className="table-head-cell text-amber-400/80">Actions</th>
+                <th className="table-head-cell text-amber-700 dark:text-amber-400/80">Asset Tag</th>
+                <th className="table-head-cell text-amber-700 dark:text-amber-400/80">Product</th>
+                <th className="table-head-cell text-amber-700 dark:text-amber-400/80">Serial</th>
+                <th className="table-head-cell text-amber-700 dark:text-amber-400/80">Status</th>
+                <th className="table-head-cell text-amber-700 dark:text-amber-400/80">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -150,11 +155,11 @@ export default function Assets() {
                   </td>
                 </tr>
               )}
-              {assets.map((asset) => (
+              {assets.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((asset) => (
                 <tr key={asset.id} className="row-hover">
-                  <td className="cell font-medium text-gray-100">{asset.asset_tag}</td>
-                  <td className="cell text-gray-400">{asset.product_name || '—'}</td>
-                  <td className="cell text-gray-400">{asset.serial_number || '—'}</td>
+                  <td className="cell font-medium text-ink-primary">{asset.asset_tag}</td>
+                  <td className="cell text-ink-secondary">{asset.product_name || '—'}</td>
+                  <td className="cell text-ink-secondary">{asset.serial_number || '—'}</td>
                   <td className="cell">
                     <StatusBadge status={asset.status} />
                   </td>
@@ -179,6 +184,9 @@ export default function Assets() {
               ))}
             </tbody>
           </table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} totalItems={assets.length} onPageChange={setPage} />
+          </div>
         </div>
       )}
 

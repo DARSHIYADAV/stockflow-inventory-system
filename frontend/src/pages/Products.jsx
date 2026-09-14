@@ -7,6 +7,7 @@ import StockHistoryModal from '../components/StockHistoryModal'
 import StatusBadge from '../components/StatusBadge'
 import Spinner from '../components/Spinner'
 import EmptyState from '../components/EmptyState'
+import Pagination, { PAGE_SIZE } from '../components/Pagination'
 import { useAuth } from '../context/AuthContext'
 import {
   createProduct,
@@ -20,6 +21,7 @@ export default function Products() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const canManage = user?.role === 'admin' || user?.role === 'manager'
+  const [page, setPage] = useState(1)
   const [editingProduct, setEditingProduct] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [stockProduct, setStockProduct] = useState(null)
@@ -80,7 +82,7 @@ export default function Products() {
   return (
     <Layout>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-emerald-400">Products</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">Products</h1>
         {canManage && (
           <button onClick={() => setShowAddModal(true)} className="btn-primary">
             + Add Product
@@ -100,12 +102,12 @@ export default function Products() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-border">
               <tr>
-                <th className="table-head-cell text-emerald-400/80">Name</th>
-                <th className="table-head-cell text-emerald-400/80">Category</th>
-                <th className="table-head-cell text-emerald-400/80">Supplier</th>
-                <th className="table-head-cell text-emerald-400/80">Quantity</th>
-                <th className="table-head-cell text-emerald-400/80">Status</th>
-                <th className="table-head-cell text-emerald-400/80">Actions</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Name</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Category</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Supplier</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Quantity</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Status</th>
+                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -116,16 +118,16 @@ export default function Products() {
                   </td>
                 </tr>
               )}
-              {products.map((product) => {
+              {products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((product) => {
                 const isLow = product.quantity <= product.low_stock_threshold
                 return (
                   <tr key={product.id} className="row-hover">
-                    <td className="cell font-medium text-gray-100">{product.name}</td>
-                    <td className="cell text-gray-400">{product.category}</td>
-                    <td className="cell text-gray-400">
+                    <td className="cell font-medium text-ink-primary">{product.name}</td>
+                    <td className="cell text-ink-secondary">{product.category}</td>
+                    <td className="cell text-ink-secondary">
                       {product.latest_supplier_name || product.supplier_name || '—'}
                     </td>
-                    <td className="cell tabular-nums text-gray-100">{product.quantity}</td>
+                    <td className="cell tabular-nums text-ink-primary">{product.quantity}</td>
                     <td className="cell">
                       <StatusBadge status={isLow ? 'low' : 'ok'} label={isLow ? 'Low Stock' : 'OK'} />
                     </td>
@@ -156,6 +158,9 @@ export default function Products() {
               })}
             </tbody>
           </table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} totalItems={products.length} onPageChange={setPage} />
+          </div>
         </div>
       )}
 

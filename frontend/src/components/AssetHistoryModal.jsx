@@ -30,11 +30,18 @@ export default function AssetHistoryModal({ asset, onClose }) {
                 >
                   {entry.action}
                 </span>
-                <span className="whitespace-nowrap text-xs text-gray-500">
+                <span className="whitespace-nowrap text-xs text-ink-muted">
                   {new Date(entry.created_at).toLocaleString()}
                 </span>
               </div>
-              {entry.note && <p className="mt-1 text-sm text-gray-400">{entry.note}</p>}
+              <p className="mt-1 text-sm text-ink-secondary">
+                {entry.action === 'assigned' ? 'To' : 'From'}:{' '}
+                <span className="font-medium text-ink-primary">
+                  {entry.employee_name || 'Unknown'}
+                </span>
+                <span className="text-ink-muted"> · by {entry.actor_name || 'Unknown'}</span>
+              </p>
+              {entry.note && <p className="mt-1 text-sm text-ink-secondary">{entry.note}</p>}
             </div>
           ))}
         </div>

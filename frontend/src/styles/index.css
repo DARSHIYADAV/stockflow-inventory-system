@@ -2,12 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-bg: 10 10 11;
+  --color-panel: 21 21 23;
+  --color-panel2: 28 28 31;
+  --color-panel-hover: 35 35 39;
+  --color-border: 42 42 47;
+  --color-border-hover: 58 58 66;
+  --color-ink-primary: 245 245 247;
+  --color-ink-secondary: 245 245 247;
+  --color-ink-muted: 245 245 247;
+}
+
+html.light {
+  --color-bg: 248 250 252;
+  --color-panel: 255 255 255;
+  --color-panel2: 241 245 249;
+  --color-panel-hover: 226 232 240;
+  --color-border: 226 232 240;
+  --color-border-hover: 203 213 225;
+  --color-ink-primary: 15 23 42;
+  --color-ink-secondary: 15 23 42;
+  --color-ink-muted: 30 41 59;
+}
+
+html {
+  color-scheme: dark;
+}
+html.light {
+  color-scheme: light;
+}
+
 body {
-  @apply bg-bg text-gray-100;
+  @apply bg-bg text-ink-primary transition-colors duration-200;
 }
 
 ::selection {
-  @apply bg-accent/30 text-white;
+  @apply bg-accent/30 text-ink-primary;
 }
 
 @layer components {
@@ -26,29 +57,31 @@ body {
       active:scale-[0.98];
   }
   .btn-secondary {
-    @apply btn border border-border bg-transparent px-4 py-2 font-medium text-gray-300
-      hover:border-borderHover hover:bg-panelHover hover:text-white active:scale-[0.98];
+    @apply btn border border-border bg-transparent px-4 py-2 font-medium text-ink-secondary
+      hover:border-borderHover hover:bg-panelHover hover:text-ink-primary active:scale-[0.98];
   }
   .btn-danger {
     @apply btn border border-red-500/30 bg-transparent px-4 py-2 font-medium text-red-400
       hover:border-red-500/50 hover:bg-red-500/10 active:scale-[0.98];
   }
   .btn-xs {
-    @apply btn rounded-md border border-border px-2.5 py-1 text-xs font-medium text-gray-300
-      hover:border-borderHover hover:bg-panelHover hover:text-white;
+    @apply btn rounded-md border border-border px-2.5 py-1 text-xs font-medium text-ink-secondary
+      hover:-translate-y-0.5 hover:border-accent/50 hover:bg-panelHover hover:text-ink-primary
+      hover:shadow-lift active:translate-y-0;
   }
   .btn-xs-danger {
     @apply btn rounded-md border border-red-500/30 px-2.5 py-1 text-xs font-medium text-red-400
-      hover:border-red-500/50 hover:bg-red-500/10;
+      hover:-translate-y-0.5 hover:border-red-500/70 hover:bg-red-500/15 hover:shadow-lift
+      active:translate-y-0;
   }
 
   /* Form fields */
   .field-label {
-    @apply mb-1.5 block text-sm font-medium text-gray-300;
+    @apply mb-1.5 block text-sm font-medium text-ink-secondary;
   }
   .input-field {
-    @apply w-full rounded-md border border-border bg-panel2 px-3 py-2 text-sm text-gray-100
-      outline-none transition-all duration-150 placeholder:text-gray-600
+    @apply w-full rounded-md border border-border bg-panel2 px-3 py-2 text-sm text-ink-primary
+      outline-none transition-all duration-150 placeholder:text-ink-muted
       hover:border-borderHover focus:border-accent focus:shadow-glow;
   }
   .select-field {
@@ -60,7 +93,7 @@ body {
     @apply overflow-x-auto card;
   }
   .table-head-cell {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+    @apply px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ink-muted;
   }
   .row-hover {
     @apply transition-colors duration-150 hover:bg-panelHover/70;
@@ -87,7 +120,19 @@ body {
     @apply bg-accent/15 text-accent;
   }
   .nav-link-inactive {
-    @apply text-gray-400 hover:bg-panelHover hover:text-gray-100;
+    @apply text-ink-secondary hover:bg-panelHover hover:text-ink-primary;
+  }
+
+  /* Sidebar */
+  .sidebar-link {
+    @apply block rounded-md border-l-2 border-transparent px-3 py-2 text-sm font-bold
+      transition-colors duration-150;
+  }
+  .sidebar-link-active {
+    @apply border-accent bg-accent/15 text-accent;
+  }
+  .sidebar-link-inactive {
+    @apply text-ink-primary hover:bg-panelHover;
   }
 
   /* Stat cards */
@@ -101,11 +146,17 @@ body {
     @apply flex flex-col items-center justify-center gap-2 px-4 py-12 text-center;
   }
   .empty-state-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-full bg-panel2 text-lg text-gray-600;
+    @apply flex h-11 w-11 items-center justify-center rounded-full bg-panel2 text-lg text-ink-muted;
   }
 
   /* Spinner */
   .spinner {
-    @apply h-5 w-5 animate-spin rounded-full border-2 border-gray-700 border-t-accent;
+    @apply h-5 w-5 animate-spin rounded-full border-2 border-border border-t-accent;
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    @apply flex h-8 w-8 items-center justify-center rounded-full border border-border
+      bg-panel2 text-sm transition-all duration-150 hover:border-borderHover hover:bg-panelHover;
   }
 }

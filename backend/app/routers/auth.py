@@ -61,6 +61,11 @@ async def _authenticate(
     if user is None or not verify_password(form_data.password, user.password_hash):
         raise invalid_credentials
 
+    # A deactivated account gets the same generic error as a wrong password,
+    # so a resigned employee's old credentials don't reveal anything either.
+    if not user.is_active:
+        raise invalid_credentials
+
     # A wrong-role attempt gets the exact same error as a wrong password —
     # never a distinct message — so probing a role-specific login endpoint
     # can't be used to learn whether an email exists or what role it has.
@@ -116,6 +121,12 @@ async def change_password(
 ):
     if not verify_password(payload.current_password, current_user.password_hash):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+
+    if payload.new_password == payload.current_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from your current password",
+        )
 
     current_user.password_hash = hash_password(payload.new_password)
     await db.commit()

@@ -25,7 +25,10 @@ async def _resolve_user(token: str, db: AsyncSession) -> User | None:
     if user_id is None:
         return None
 
-    return await db.get(User, UUID(user_id))
+    user = await db.get(User, UUID(user_id))
+    if user is not None and not user.is_active:
+        return None
+    return user
 
 
 async def get_current_user(

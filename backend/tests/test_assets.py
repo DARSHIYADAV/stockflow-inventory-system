@@ -125,12 +125,16 @@ async def test_assign_and_return_write_history_rows(client, admin_user, employee
     assigned_entry, returned_entry = history
     assert assigned_entry["action"] == "assigned"
     assert assigned_entry["employee_id"] == str(employee_user.id)
+    assert assigned_entry["employee_name"] == employee_user.name
     assert assigned_entry["actor_id"] == str(admin_user.id)
+    assert assigned_entry["actor_name"] == admin_user.name
     assert assigned_entry["note"] == "assigned for onboarding"
 
     assert returned_entry["action"] == "returned"
     assert returned_entry["employee_id"] == str(employee_user.id)
+    assert returned_entry["employee_name"] == employee_user.name
     assert returned_entry["actor_id"] == str(admin_user.id)
+    assert returned_entry["actor_name"] == admin_user.name
     assert returned_entry["note"] == "returned at offboarding"
 
 

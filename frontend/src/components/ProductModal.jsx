@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from './Modal'
 
-const emptyForm = { name: '', category: '', supplier_name: '', low_stock_threshold: 0 }
+const emptyForm = { name: '', category: '', low_stock_threshold: 0 }
 
 export default function ProductModal({ product, onClose, onSubmit, submitting, error }) {
   const [form, setForm] = useState(
@@ -9,7 +9,6 @@ export default function ProductModal({ product, onClose, onSubmit, submitting, e
       ? {
           name: product.name,
           category: product.category,
-          supplier_name: product.supplier_name || '',
           low_stock_threshold: product.low_stock_threshold,
         }
       : emptyForm
@@ -24,7 +23,6 @@ export default function ProductModal({ product, onClose, onSubmit, submitting, e
     onSubmit({
       ...form,
       low_stock_threshold: Number(form.low_stock_threshold),
-      supplier_name: form.supplier_name || null,
     })
   }
 
@@ -46,14 +44,6 @@ export default function ProductModal({ product, onClose, onSubmit, submitting, e
             required
             value={form.category}
             onChange={(e) => handleChange('category', e.target.value)}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label className="field-label">Supplier</label>
-          <input
-            value={form.supplier_name}
-            onChange={(e) => handleChange('supplier_name', e.target.value)}
             className="input-field"
           />
         </div>

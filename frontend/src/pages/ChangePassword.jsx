@@ -20,6 +20,11 @@ export default function ChangePassword() {
       return
     }
 
+    if (newPassword === currentPassword) {
+      setError('New password must be different from your current password')
+      return
+    }
+
     setSubmitting(true)
     try {
       await changePassword(currentPassword, newPassword)
@@ -36,7 +41,7 @@ export default function ChangePassword() {
 
   return (
     <Layout>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-rose-400">Change Password</h1>
+      <h1 className="mb-6 text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400">Change Password</h1>
 
       <div className="max-w-md card p-6">
         <form onSubmit={handleSubmit} className="space-y-4">

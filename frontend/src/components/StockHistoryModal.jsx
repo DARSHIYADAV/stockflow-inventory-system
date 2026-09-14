@@ -31,12 +31,12 @@ export default function StockHistoryModal({ product, onClose }) {
                   {entry.change_quantity > 0 ? '+' : ''}
                   {entry.change_quantity}
                 </span>
-                <span className="whitespace-nowrap text-xs text-gray-500">
+                <span className="whitespace-nowrap text-xs text-ink-muted">
                   {new Date(entry.created_at).toLocaleString()}
                 </span>
               </div>
               {entry.supplier_name && (
-                <p className="mt-1 text-sm text-gray-400">Supplier: {entry.supplier_name}</p>
+                <p className="mt-1 text-sm text-ink-secondary">Supplier: {entry.supplier_name}</p>
               )}
             </div>
           ))}

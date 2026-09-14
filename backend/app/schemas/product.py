@@ -7,14 +7,12 @@ from pydantic import BaseModel, ConfigDict, Field
 class ProductCreate(BaseModel):
     name: str
     category: str
-    supplier_name: str | None = None
     low_stock_threshold: int = 0
 
 
 class ProductUpdate(BaseModel):
     name: str
     category: str
-    supplier_name: str | None = None
     low_stock_threshold: int = 0
 
 

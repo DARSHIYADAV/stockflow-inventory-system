@@ -8,7 +8,7 @@ from app.core.dependencies import require_admin, require_admin_or_manager
 from app.core.security import hash_password
 from app.database import get_db
 from app.models.user import User, UserRole
-from app.schemas.user import ManagedUserCreate, PasswordReset, UserOut, UserRoleUpdate
+from app.schemas.user import ManagedUserCreate, ManagedUserUpdate, PasswordReset, UserOut, UserRoleUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -59,8 +59,34 @@ async def list_assignable_users(
     table): just enough user info for admin/manager to pick who an asset
     gets assigned to, without exposing full user management.
     """
-    result = await db.execute(select(User).order_by(User.name))
+    result = await db.execute(
+        select(User).where(User.is_active.is_(True)).order_by(User.name)
+    )
     return result.scalars().all()
+
+
+@router.put("/{user_id}", response_model=UserOut)
+async def update_user(
+    user_id: UUID,
+    payload: ManagedUserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    user = await db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    existing = await db.scalar(
+        select(User).where(User.email == payload.email, User.id != user_id)
+    )
+    if existing is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    user.name = payload.name
+    user.email = payload.email
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.put("/{user_id}/role", response_model=UserOut)
@@ -104,6 +130,44 @@ async def reset_password(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     target_user.password_hash = hash_password(payload.new_password)
+    await db.commit()
+    await db.refresh(target_user)
+    return target_user
+
+
+@router.put("/{user_id}/deactivate", response_model=UserOut)
+async def deactivate_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You cannot deactivate your own account")
+
+    target_user = await db.get(User, user_id)
+    if target_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if target_user.role == UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Admin accounts cannot be deactivated")
+
+    target_user.is_active = False
+    await db.commit()
+    await db.refresh(target_user)
+    return target_user
+
+
+@router.put("/{user_id}/reactivate", response_model=UserOut)
+async def reactivate_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    target_user = await db.get(User, user_id)
+    if target_user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    target_user.is_active = True
     await db.commit()
     await db.refresh(target_user)
     return target_user

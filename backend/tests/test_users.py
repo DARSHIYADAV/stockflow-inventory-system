@@ -112,13 +112,13 @@ async def test_employee_cannot_list_assignable_users(client, employee_user):
 async def test_admin_can_create_manager(client, admin_user):
     resp = await client.post(
         "/users",
-        json={"name": "New Manager", "email": "newmgr@stockflow.com", "password": "pass1234", "role": "manager"},
+        json={"name": "New Manager", "email": "newmgr@staunchsys.com", "password": "pass1234", "role": "manager"},
         headers=auth_headers(admin_user),
     )
     assert resp.status_code == 201
     body = resp.json()
     assert body["role"] == "manager"
-    assert body["email"] == "newmgr@stockflow.com"
+    assert body["email"] == "newmgr@staunchsys.com"
     assert "password" not in body
     assert "password_hash" not in body
 
@@ -126,7 +126,7 @@ async def test_admin_can_create_manager(client, admin_user):
 async def test_admin_can_create_employee(client, admin_user):
     resp = await client.post(
         "/users",
-        json={"name": "New Emp", "email": "newemp@stockflow.com", "password": "pass1234", "role": "employee"},
+        json={"name": "New Emp", "email": "newemp@staunchsys.com", "password": "pass1234", "role": "employee"},
         headers=auth_headers(admin_user),
     )
     assert resp.status_code == 201
@@ -137,6 +137,15 @@ async def test_admin_cannot_create_admin_via_this_endpoint(client, admin_user):
     resp = await client.post(
         "/users",
         json={"name": "Sneaky Admin", "email": "sneaky@stockflow.com", "password": "pass1234", "role": "admin"},
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 422
+
+
+async def test_create_user_rejects_non_company_email(client, admin_user):
+    resp = await client.post(
+        "/users",
+        json={"name": "Outsider", "email": "outsider@gmail.com", "password": "pass1234", "role": "employee"},
         headers=auth_headers(admin_user),
     )
     assert resp.status_code == 422
@@ -154,14 +163,14 @@ async def test_manager_cannot_create_users(client, manager_user):
 async def test_created_user_can_log_in_with_set_password(client, admin_user):
     resp = await client.post(
         "/users",
-        json={"name": "Login Test", "email": "logintest@stockflow.com", "password": "mypassword1", "role": "employee"},
+        json={"name": "Login Test", "email": "logintest@staunchsys.com", "password": "mypassword1", "role": "employee"},
         headers=auth_headers(admin_user),
     )
     assert resp.status_code == 201
 
     login_resp = await client.post(
         "/auth/login",
-        data={"username": "logintest@stockflow.com", "password": "mypassword1"},
+        data={"username": "logintest@staunchsys.com", "password": "mypassword1"},
     )
     assert login_resp.status_code == 200
     assert "access_token" in login_resp.json()
@@ -199,6 +208,16 @@ async def test_change_password_rejects_wrong_current_password(client, employee_u
         data={"username": employee_user.email, "password": "password123"},
     )
     assert login_resp.status_code == 200
+
+
+async def test_change_password_rejects_same_as_current(client, employee_user):
+    resp = await client.put(
+        "/auth/change-password",
+        json={"current_password": "password123", "new_password": "password123"},
+        headers=auth_headers(employee_user),
+    )
+    assert resp.status_code == 400
+    assert "different" in resp.json()["detail"].lower()
 
 
 # --- PUT /users/{id}/reset-password ---

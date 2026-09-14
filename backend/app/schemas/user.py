@@ -2,9 +2,11 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 from app.models.user import UserRole
+
+COMPANY_EMAIL_DOMAIN = "@staunchsys.com"
 
 
 class UserRegister(BaseModel):
@@ -26,6 +28,7 @@ class UserOut(BaseModel):
     name: str
     email: EmailStr
     role: UserRole
+    is_active: bool
     created_at: datetime
 
 
@@ -54,6 +57,13 @@ class ManagedUserCreate(BaseModel):
     password: str
     role: Literal["manager", "employee"]
 
+    @field_validator("email")
+    @classmethod
+    def email_must_be_company_domain(cls, value: str) -> str:
+        if not value.lower().endswith(COMPANY_EMAIL_DOMAIN):
+            raise ValueError(f"Email must end with {COMPANY_EMAIL_DOMAIN}")
+        return value
+
 
 class PasswordChange(BaseModel):
     current_password: str
@@ -62,3 +72,17 @@ class PasswordChange(BaseModel):
 
 class PasswordReset(BaseModel):
     new_password: str
+
+
+class ManagedUserUpdate(BaseModel):
+    """Admin edits an existing user's name/email via PUT /users/{id}."""
+
+    name: str
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_company_domain(cls, value: str) -> str:
+        if not value.lower().endswith(COMPANY_EMAIL_DOMAIN):
+            raise ValueError(f"Email must end with {COMPANY_EMAIL_DOMAIN}")
+        return value

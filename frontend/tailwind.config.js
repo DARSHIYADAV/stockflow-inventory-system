@@ -1,18 +1,24 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        bg: '#0a0a0b',
-        panel: '#151517',
-        panel2: '#1c1c1f',
-        panelHover: '#232327',
-        border: '#2a2a2f',
-        borderHover: '#3a3a42',
+        bg: 'rgb(var(--color-bg) / <alpha-value>)',
+        panel: 'rgb(var(--color-panel) / <alpha-value>)',
+        panel2: 'rgb(var(--color-panel2) / <alpha-value>)',
+        panelHover: 'rgb(var(--color-panel-hover) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        borderHover: 'rgb(var(--color-border-hover) / <alpha-value>)',
         accent: {
           DEFAULT: '#3b82f6',
           hover: '#2f6fe0',
+        },
+        ink: {
+          primary: 'rgb(var(--color-ink-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--color-ink-secondary) / <alpha-value>)',
+          muted: 'rgb(var(--color-ink-muted) / <alpha-value>)',
         },
       },
       borderRadius: {

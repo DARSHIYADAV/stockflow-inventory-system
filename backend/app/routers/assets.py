@@ -37,6 +37,13 @@ async def get_product_names(db: AsyncSession, product_ids: list[UUID]) -> dict[U
     return dict(result.all())
 
 
+async def get_user_names(db: AsyncSession, user_ids: list[UUID]) -> dict[UUID, str]:
+    if not user_ids:
+        return {}
+    result = await db.execute(select(User.id, User.name).where(User.id.in_(user_ids)))
+    return dict(result.all())
+
+
 def _to_asset_out(asset: Asset, product_name: str | None) -> AssetOut:
     return AssetOut(
         id=asset.id,
@@ -161,7 +168,25 @@ async def get_asset_history(
     result = await db.execute(
         select(AssetHistory).where(AssetHistory.asset_id == asset_id).order_by(AssetHistory.created_at)
     )
-    return result.scalars().all()
+    history = result.scalars().all()
+
+    user_ids = {h.employee_id for h in history} | {h.actor_id for h in history}
+    user_names = await get_user_names(db, list(user_ids))
+
+    return [
+        AssetHistoryOut(
+            id=h.id,
+            asset_id=h.asset_id,
+            action=h.action,
+            employee_id=h.employee_id,
+            employee_name=user_names.get(h.employee_id),
+            actor_id=h.actor_id,
+            actor_name=user_names.get(h.actor_id),
+            note=h.note,
+            created_at=h.created_at,
+        )
+        for h in history
+    ]
 
 
 @router.post("/{asset_id}/assign", response_model=AssetOut)

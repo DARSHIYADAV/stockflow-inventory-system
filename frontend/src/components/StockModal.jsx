@@ -18,8 +18,8 @@ export default function StockModal({ product, onClose, onSubmit, submitting, err
 
   return (
     <Modal title={`Stock: ${product.name}`} onClose={onClose}>
-      <p className="mb-4 text-sm text-gray-400">
-        Current quantity: <span className="font-medium text-gray-100">{product.quantity}</span>
+      <p className="mb-4 text-sm text-ink-secondary">
+        Current quantity: <span className="font-medium text-ink-primary">{product.quantity}</span>
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-2">
@@ -29,7 +29,7 @@ export default function StockModal({ product, onClose, onSubmit, submitting, err
             className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150 ${
               direction === 'in'
                 ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-400'
-                : 'border-border text-gray-400 hover:border-borderHover hover:bg-panelHover'
+                : 'border-border text-ink-secondary hover:border-borderHover hover:bg-panelHover'
             }`}
           >
             Stock In
@@ -40,7 +40,7 @@ export default function StockModal({ product, onClose, onSubmit, submitting, err
             className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150 ${
               direction === 'out'
                 ? 'border-red-500/40 bg-red-500/15 text-red-400'
-                : 'border-border text-gray-400 hover:border-borderHover hover:bg-panelHover'
+                : 'border-border text-ink-secondary hover:border-borderHover hover:bg-panelHover'
             }`}
           >
             Stock Out

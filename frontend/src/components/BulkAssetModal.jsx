@@ -118,9 +118,9 @@ export default function BulkAssetModal({ products, onClose, onSubmit, submitting
           </div>
 
           {form.count > 0 && (
-            <p className="rounded-md bg-panel2 px-3 py-2 text-xs text-gray-500">
-              Will create <span className="font-medium text-gray-300">{previewFirst}</span> through{' '}
-              <span className="font-medium text-gray-300">{previewLast}</span> (existing tags are
+            <p className="rounded-md bg-panel2 px-3 py-2 text-xs text-ink-muted">
+              Will create <span className="font-medium text-ink-secondary">{previewFirst}</span> through{' '}
+              <span className="font-medium text-ink-secondary">{previewLast}</span> (existing tags are
               skipped automatically)
             </p>
           )}
