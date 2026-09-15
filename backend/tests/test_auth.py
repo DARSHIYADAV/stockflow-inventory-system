@@ -98,3 +98,40 @@ async def test_shared_login_still_works_for_any_role(client, admin_user, manager
     for user in (admin_user, manager_user, employee_user):
         resp = await _login(client, user.email, "password123")
         assert resp.status_code == 200
+
+
+# --- only one admin account may ever exist ---
+
+
+async def test_register_rejects_second_admin(client, admin_user):
+    from tests.conftest import auth_headers
+
+    resp = await client.post(
+        "/auth/register",
+        json={
+            "name": "Second Admin",
+            "email": "second-admin@staunchsys.com",
+            "password": "pass1234",
+            "role": "admin",
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 400
+    assert "one admin" in resp.json()["detail"].lower()
+
+
+async def test_register_still_allows_manager_and_employee(client, admin_user):
+    from tests.conftest import auth_headers
+
+    resp = await client.post(
+        "/auth/register",
+        json={
+            "name": "New Manager",
+            "email": "new-manager@staunchsys.com",
+            "password": "pass1234",
+            "role": "manager",
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert resp.status_code == 201
+    assert resp.json()["role"] == "manager"

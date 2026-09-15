@@ -31,6 +31,13 @@ async def register(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
         if actor.role != UserRole.admin:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+        # Exactly one admin account may ever exist — it's created once via
+        # the bootstrap case above and never duplicated afterward.
+        if payload.role == UserRole.admin:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only one admin account is allowed",
+            )
         role = payload.role
 
     existing = await db.scalar(select(User).where(User.email == payload.email))

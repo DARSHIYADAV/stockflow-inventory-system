@@ -75,16 +75,6 @@ async def test_cannot_demote_last_admin(client, admin_user):
     assert resp.status_code == 409
 
 
-async def test_can_demote_admin_when_another_admin_exists(client, admin_user, second_admin_user):
-    resp = await client.put(
-        f"/users/{admin_user.id}/role",
-        json={"role": "employee"},
-        headers=auth_headers(second_admin_user),
-    )
-    assert resp.status_code == 200
-    assert resp.json()["role"] == "employee"
-
-
 async def test_update_nonexistent_user_returns_404(client, admin_user):
     resp = await client.put(
         "/users/00000000-0000-0000-0000-000000000000/role",
@@ -389,13 +379,6 @@ async def test_deactivated_user_excluded_from_assignable_list(
 async def test_admin_cannot_deactivate_self(client, admin_user):
     resp = await client.put(
         f"/users/{admin_user.id}/deactivate", headers=auth_headers(admin_user)
-    )
-    assert resp.status_code == 400
-
-
-async def test_admin_cannot_deactivate_another_admin(client, admin_user, second_admin_user):
-    resp = await client.put(
-        f"/users/{second_admin_user.id}/deactivate", headers=auth_headers(admin_user)
     )
     assert resp.status_code == 400
 
