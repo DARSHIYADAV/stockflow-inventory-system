@@ -1,0 +1,347 @@
+<title>StockFlow Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f6f7f9;
+    --panel:#ffffff;
+    --panel-2:#eef1f5;
+    --border:#dde2e9;
+    --ink-1:#171b23;
+    --ink-2:#4c5563;
+    --ink-3:#8992a3;
+    --accent:#2f5fd6;
+    --accent-ink:#1c3fa0;
+    --accent-soft:#e8eefc;
+    --good:#15803d;
+    --good-soft:#e7f5ec;
+    --warn:#a5610a;
+    --warn-soft:#fbf0e0;
+    --crit:#b8283a;
+    --crit-soft:#fbe9ea;
+    --rule: 1px solid var(--border);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0c0e13;
+      --panel:#12151c;
+      --panel-2:#171b24;
+      --border:#262b37;
+      --ink-1:#eef1f6;
+      --ink-2:#aab1c0;
+      --ink-3:#6b7385;
+      --accent:#6d93ff;
+      --accent-ink:#a9c0ff;
+      --accent-soft:#182140;
+      --good:#4fce85;
+      --good-soft:#122a1c;
+      --warn:#e2a545;
+      --warn-soft:#2e2210;
+      --crit:#f0707f;
+      --crit-soft:#301419;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0c0e13;
+    --panel:#12151c;
+    --panel-2:#171b24;
+    --border:#262b37;
+    --ink-1:#eef1f6;
+    --ink-2:#aab1c0;
+    --ink-3:#6b7385;
+    --accent:#6d93ff;
+    --accent-ink:#a9c0ff;
+    --accent-soft:#182140;
+    --good:#4fce85;
+    --good-soft:#122a1c;
+    --warn:#e2a545;
+    --warn-soft:#2e2210;
+    --crit:#f0707f;
+    --crit-soft:#301419;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg);
+    color:var(--ink-1);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    padding-inline:20px;
+    padding-block:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); color:var(--ink-1); }
+
+  .wrap{ max-width:920px; margin:0 auto; padding-block:56px 80px; }
+
+  /* ---------- Header / masthead ---------- */
+  .masthead{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:24px;
+    padding-bottom:22px; border-bottom:2px solid var(--ink-1);
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:38px;height:38px;border-radius:9px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px;
+    flex:none;
+  }
+  .brand-name{ font-family:'Source Serif 4', serif; font-weight:600; font-size:1.05rem; letter-spacing:.01em; }
+  .doc-meta{ text-align:right; font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--ink-3); line-height:1.6; }
+  .doc-meta b{ color:var(--ink-2); font-weight:500; }
+
+  .title-block{ padding-block:34px 8px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent-ink); margin:0 0 14px;
+  }
+  h1{
+    font-family:'Source Serif 4', serif; font-weight:600; font-size:clamp(1.9rem,4vw,2.7rem);
+    line-height:1.12; letter-spacing:-.01em; margin:0 0 14px; text-wrap:balance;
+    max-width:18ch;
+  }
+  .dek{ font-size:1.05rem; color:var(--ink-2); max-width:62ch; line-height:1.6; margin:0; }
+
+  /* ---------- Status ledger strip ---------- */
+  .ledger{
+    margin-top:34px; border:var(--rule); border-radius:10px; background:var(--panel);
+    display:grid; grid-template-columns:repeat(4,1fr);
+  }
+  .ledger-cell{ padding:18px 20px; border-right:var(--rule); }
+  .ledger-cell:last-child{ border-right:none; }
+  .ledger-label{ font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-3); margin:0 0 8px; }
+  .ledger-value{ font-family:'IBM Plex Mono',monospace; font-size:1.5rem; font-weight:600; font-variant-numeric:tabular-nums; }
+  .ledger-value.good{ color:var(--good); }
+  .ledger-sub{ font-size:.76rem; color:var(--ink-3); margin-top:4px; }
+
+  /* ---------- Sections ---------- */
+  section{ margin-top:52px; }
+  .sec-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:18px; }
+  .sec-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--ink-3);
+    border:var(--rule); border-radius:5px; padding:2px 7px; flex:none;
+  }
+  h2{
+    font-family:'Source Serif 4', serif; font-weight:600; font-size:1.4rem; margin:0;
+    letter-spacing:-.005em;
+  }
+  p{ line-height:1.7; color:var(--ink-2); max-width:70ch; }
+  p.lede{ color:var(--ink-1); }
+  strong{ color:var(--ink-1); font-weight:600; }
+  code, .mono{ font-family:'IBM Plex Mono',monospace; }
+  code{
+    background:var(--panel-2); border:var(--rule); border-radius:4px;
+    padding:.1em .4em; font-size:.86em; color:var(--ink-1);
+  }
+
+  /* ---------- Two-col layout ---------- */
+  .cols{ display:grid; grid-template-columns:1.1fr .9fr; gap:36px; align-items:start; }
+
+  /* ---------- Role table ---------- */
+  .rtable{ width:100%; border-collapse:collapse; margin-top:4px; }
+  .rtable th, .rtable td{ text-align:left; padding:10px 12px; border-bottom:var(--rule); font-size:.88rem; }
+  .rtable thead th{
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3);
+    border-bottom:1px solid var(--ink-1); padding-bottom:8px;
+  }
+  .rtable td:first-child, .rtable th:first-child{ padding-left:0; }
+  .role-pill{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.72rem; font-weight:600;
+    padding:2px 9px; border-radius:20px;
+  }
+  .role-admin{ background:var(--accent-soft); color:var(--accent-ink); }
+  .role-manager{ background:var(--warn-soft); color:var(--warn); }
+  .role-employee{ background:var(--good-soft); color:var(--good); }
+  .yes{ color:var(--good); font-weight:600; }
+  .no{ color:var(--ink-3); }
+
+  /* ---------- Feature ledger rows ---------- */
+  .flist{ display:flex; flex-direction:column; margin-top:6px; }
+  .frow{
+    display:grid; grid-template-columns:88px 1fr; gap:16px; padding-block:14px;
+    border-top:var(--rule);
+  }
+  .frow:last-child{ border-bottom:var(--rule); }
+  .ftag{ font-family:'IBM Plex Mono',monospace; font-size:.75rem; color:var(--ink-3); padding-top:2px; }
+  .fbody h3{ margin:0 0 4px; font-size:.98rem; font-weight:600; font-family:'IBM Plex Sans',sans-serif; }
+  .fbody p{ margin:0; font-size:.87rem; }
+
+  /* ---------- Test summary bars ---------- */
+  .barrow{ display:flex; align-items:center; gap:12px; padding-block:9px; }
+  .barrow .blabel{ width:190px; font-size:.82rem; color:var(--ink-2); flex:none; }
+  .bartrack{ flex:1; height:8px; border-radius:5px; background:var(--panel-2); overflow:hidden; }
+  .barfill{ height:100%; background:var(--good); border-radius:5px; }
+  .barcount{ width:64px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--ink-2); flex:none; font-variant-numeric:tabular-nums; }
+
+  /* ---------- Credentials block ---------- */
+  .cred{ border:var(--rule); border-radius:10px; overflow:hidden; margin-top:4px; }
+  .cred-row{ display:grid; grid-template-columns:1fr 1.4fr 1fr; }
+  .cred-row + .cred-row{ border-top:var(--rule); }
+  .cred-row.head{ background:var(--panel-2); }
+  .cred-cell{ padding:11px 14px; font-size:.85rem; }
+  .cred-row.head .cred-cell{ font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); }
+  .cred-cell.mono{ font-family:'IBM Plex Mono',monospace; }
+
+  /* ---------- Callouts ---------- */
+  .note{
+    display:flex; gap:12px; padding:14px 16px; border-radius:8px; margin-top:16px;
+    border:1px solid; font-size:.87rem; line-height:1.6;
+  }
+  .note.open{ background:var(--warn-soft); border-color:color-mix(in srgb, var(--warn) 40%, transparent); color:var(--ink-1); }
+  .note .dot{ width:8px;height:8px;border-radius:50%; margin-top:6px; flex:none; }
+  .note.open .dot{ background:var(--warn); }
+
+  /* ---------- Footer ---------- */
+  footer{
+    margin-top:64px; padding-top:18px; border-top:var(--rule);
+    display:flex; justify-content:space-between; color:var(--ink-3); font-size:.75rem;
+    font-family:'IBM Plex Mono',monospace; flex-wrap:wrap; gap:8px;
+  }
+
+  @media (max-width:720px){
+    .ledger{ grid-template-columns:repeat(2,1fr); }
+    .ledger-cell:nth-child(2){ border-right:none; }
+    .cols{ grid-template-columns:1fr; }
+    .cred-row{ grid-template-columns:1fr 1fr; }
+    .cred-row .cred-cell:last-child{ grid-column:1 / -1; border-top:var(--rule); }
+    h1{ max-width:none; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="brand">
+      <div class="brand-mark">SF</div>
+      <div class="brand-name">StockFlow</div>
+    </div>
+    <div class="doc-meta">
+      <div><b>Document</b> RPT&#8209;2026&#8209;09&#8209;15</div>
+      <div><b>Prepared for</b> Demo review</div>
+      <div><b>Status</b> Ready for demo</div>
+    </div>
+  </div>
+
+  <div class="title-block">
+    <p class="eyebrow">Project status report</p>
+    <h1>Inventory &amp; asset tracking, built and verified</h1>
+    <p class="dek">A working audit of what StockFlow does today, who can do what in it, and the checks that were run against every endpoint ahead of tomorrow's walkthrough.</p>
+  </div>
+
+  <div class="ledger">
+    <div class="ledger-cell">
+      <p class="ledger-label">Backend tests</p>
+      <p class="ledger-value good">98 / 98</p>
+      <p class="ledger-sub">passing, incl. RBAC boundaries</p>
+    </div>
+    <div class="ledger-cell">
+      <p class="ledger-label">Roles supported</p>
+      <p class="ledger-value">3</p>
+      <p class="ledger-sub">admin &middot; manager &middot; employee</p>
+    </div>
+    <div class="ledger-cell">
+      <p class="ledger-label">Core tables</p>
+      <p class="ledger-value">5</p>
+      <p class="ledger-sub">users, products, stock, assets, history</p>
+    </div>
+    <div class="ledger-cell">
+      <p class="ledger-label">Live endpoint check</p>
+      <p class="ledger-value good">Passed</p>
+      <p class="ledger-sub">run against dev server, 2026&#8209;09&#8209;14</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">01</span><h2>What it does</h2></div>
+    <div class="cols">
+      <div>
+        <p class="lede">StockFlow tracks two kinds of company property: bulk <strong>stock</strong> (laptops, monitors, keyboards &mdash; counted, not individually tracked) and specific <strong>assets</strong> (one laptop with one serial number, assigned to one employee at a time).</p>
+        <p>The idea the whole system is built around: a product's quantity is never a number that lives in a row waiting to be edited. It's a total, calculated fresh every time by summing every stock-in and stock-out entry ever recorded against it &mdash; a ledger, the same way a bank balance is a ledger of transactions rather than a single editable field. Nothing gets overwritten; every change is a new row.</p>
+      </div>
+      <div>
+        <p>The same rule governs assets: assigning or returning a laptop doesn't just flip its status, it appends a row to <code>asset_history</code>. Ask "who has AST&#8209;004 had it, and when" and the app can always answer, because the answer was never anything but a stored fact.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">02</span><h2>Who can do what</h2></div>
+    <table class="rtable">
+      <thead>
+        <tr><th>Capability</th><th><span class="role-pill role-admin">Admin</span></th><th><span class="role-pill role-manager">Manager</span></th><th><span class="role-pill role-employee">Employee</span></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>View dashboard &amp; recent activity</td><td class="yes">Full</td><td class="yes">Counts only</td><td class="no">&mdash;</td></tr>
+        <tr><td>Manage products &amp; stock</td><td class="yes">Yes</td><td class="no">&mdash;</td><td class="no">&mdash;</td></tr>
+        <tr><td>Create / assign / return assets</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">&mdash;</td></tr>
+        <tr><td>View own assigned equipment</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Manage user accounts</td><td class="yes">Yes</td><td class="no">&mdash;</td><td class="no">&mdash;</td></tr>
+        <tr><td>Deactivate / reactivate a user</td><td class="yes">Yes</td><td class="no">&mdash;</td><td class="no">&mdash;</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px;font-size:.85rem;">Every role has its own sign-in URL. Trying to log into the wrong one fails with the identical "incorrect email or password" message a real wrong password would give &mdash; there's no way to probe an address and learn what role it holds.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">03</span><h2>Recently shipped</h2></div>
+    <div class="flist">
+      <div class="frow">
+        <div class="ftag">AST&#8209;12</div>
+        <div class="fbody"><h3>Account deactivation</h3><p>A resigned employee can be switched off &mdash; blocked from logging in and hidden from the "assign to" list &mdash; without deleting their name out of the audit trail. Admin accounts and your own account are protected from being deactivated by mistake.</p></div>
+      </div>
+      <div class="frow">
+        <div class="ftag">AST&#8209;13</div>
+        <div class="fbody"><h3>Edit user details</h3><p>Admins can correct a name or email after the fact. New and edited addresses are required to end in <code>@staunchsys.com</code>, checked on both the form and the server.</p></div>
+      </div>
+      <div class="frow">
+        <div class="ftag">AST&#8209;14</div>
+        <div class="fbody"><h3>Numbered pagination</h3><p>Assets, Products, Users, and My&nbsp;Assets now page five rows at a time with numbered controls, instead of one long scrolling table.</p></div>
+      </div>
+      <div class="frow">
+        <div class="ftag">AST&#8209;15</div>
+        <div class="fbody"><h3>Named history</h3><p>Asset history shows who assigned and who received an item by name, not a raw internal ID.</p></div>
+      </div>
+      <div class="frow">
+        <div class="ftag">AST&#8209;16</div>
+        <div class="fbody"><h3>Left-hand navigation &amp; theme</h3><p>Page links moved into a persistent sidebar with an always-visible account card; a light/dark toggle lives in the top bar and resets to dark on every fresh sign-in.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">04</span><h2>What was verified before this report</h2></div>
+    <p>The automated suite covers stock derivation, RBAC boundaries, and the newer account-management endpoints. On top of that, every endpoint was hit live against the running server yesterday &mdash; not just the isolated test database &mdash; to catch anything a unit test alone would miss.</p>
+    <div style="margin-top:18px;">
+      <div class="barrow"><div class="blabel">Auth &amp; role-locked login</div><div class="bartrack"><div class="barfill" style="width:100%"></div></div><div class="barcount">11 tests</div></div>
+      <div class="barrow"><div class="blabel">Stock &amp; product rules</div><div class="bartrack"><div class="barfill" style="width:100%"></div></div><div class="barcount">17 tests</div></div>
+      <div class="barrow"><div class="blabel">Assets, assign &amp; return</div><div class="bartrack"><div class="barfill" style="width:100%"></div></div><div class="barcount">21 tests</div></div>
+      <div class="barrow"><div class="blabel">Dashboard summary</div><div class="bartrack"><div class="barfill" style="width:100%"></div></div><div class="barcount">7 tests</div></div>
+      <div class="barrow"><div class="blabel">Users &amp; accounts</div><div class="bartrack"><div class="barfill" style="width:100%"></div></div><div class="barcount">42 tests</div></div>
+    </div>
+    <p style="margin-top:6px;">Live check confirmed, end to end: product &rarr; stock&#8209;in &rarr; asset created &rarr; assigned &rarr; history recorded with names &rarr; returned, plus every wrong-role and invalid-state action correctly rejected (double-assign, double-return, cross-role login).</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">05</span><h2>Demo sign-ins</h2></div>
+    <div class="cred">
+      <div class="cred-row head"><div class="cred-cell">Role</div><div class="cred-cell">Email</div><div class="cred-cell">Password</div></div>
+      <div class="cred-row"><div class="cred-cell"><span class="role-pill role-admin">Admin</span></div><div class="cred-cell mono">dyadav@staunchsys.com</div><div class="cred-cell mono">Demo@123</div></div>
+      <div class="cred-row"><div class="cred-cell"><span class="role-pill role-manager">Manager</span></div><div class="cred-cell mono">apawar@staunchsys.com</div><div class="cred-cell mono">Demo@123</div></div>
+      <div class="cred-row"><div class="cred-cell"><span class="role-pill role-employee">Employee</span></div><div class="cred-cell mono">vchoudhary@staunchsys.com</div><div class="cred-cell mono">Demo@123</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-tag">06</span><h2>Open items</h2></div>
+    <div class="note open">
+      <div class="dot"></div>
+      <div><strong>Self-service "forgot password" is not enabled.</strong> A working email-reset flow was built and tested but removed after discovering the outbound email provider can't yet deliver to arbitrary <code>@staunchsys.com</code> inboxes &mdash; that requires DNS records added by whoever administers the staunchsys.com domain. Until then, an admin resets passwords directly from the Users page.</div>
+    </div>
+  </section>
+
+  <footer>
+    <div>StockFlow &middot; internal inventory &amp; asset system</div>
+    <div>Generated 2026&#8209;09&#8209;15</div>
+  </footer>
+
+</div>
