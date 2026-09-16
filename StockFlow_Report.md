@@ -1,16 +1,7 @@
 # StockFlow — Project Status Report
 
-**Document:** RPT-2026-09-15 &nbsp;|&nbsp; **Prepared for:** Demo review
-**Status:** Ready for demo &nbsp;|&nbsp; **Generated:** 2026-09-15
-
-## Summary
-
-| | |
-|---|---|
-| Backend tests | 98 / 98 passing (incl. RBAC boundaries) |
-| Roles supported | 3 (admin, manager, employee) |
-| Core tables | 5 (users, products, stock_transactions, assets, asset_history) |
-| Live endpoint check | Passed (run against dev server, 2026-09-14) |
+**Document:** RPT-2026-09-16 &nbsp;|&nbsp; **Prepared for:** Demo review
+**Status:** Ready for demo
 
 ## 01. What it does
 
@@ -33,39 +24,37 @@ The same rule governs assets: assigning or returning a laptop doesn't just flip 
 
 Every role has its own sign-in URL. Trying to log into the wrong one fails with the identical "incorrect email or password" message a real wrong password would give — there is no way to probe an address and learn what role it holds.
 
-## 03. Recently shipped
+Exactly **one admin account** can ever exist — enforced with a database-level unique constraint, not just an application check, so it holds even against a direct database edit.
 
-- **Account deactivation** — A resigned employee can be switched off — blocked from logging in and hidden from the "assign to" list — without deleting their name out of the audit trail. Admin accounts and your own account are protected from being deactivated by mistake.
-- **Edit user details** — Admins can correct a name or email after the fact. New and edited addresses are required to end in `@staunchsys.com`, checked on both the form and the server.
-- **Numbered pagination** — Assets, Products, Users, and My Assets now page five rows at a time with numbered controls, instead of one long scrolling table.
-- **Named history** — Asset history shows who assigned and who received an item by name, not a raw internal ID.
-- **Left-hand navigation & theme** — Page links moved into a persistent sidebar with an always-visible account card; a light/dark toggle lives in the top bar and resets to dark on every fresh sign-in.
+## 03. What was verified before this report
 
-## 04. What was verified before this report
-
-The automated suite covers stock derivation, RBAC boundaries, and the newer account-management endpoints. On top of that, every endpoint was hit live against the running server, not just the isolated test database, to catch anything a unit test alone would miss.
+The automated suite covers stock derivation, RBAC boundaries, and account-management endpoints. On top of that, every endpoint was hit live against the running server — not just the isolated test database — to catch anything a unit test alone would miss.
 
 | Area | Tests | Result |
 |---|---|---|
-| Auth & role-locked login | 11 | ✅ Pass |
-| Stock & product rules | 17 | ✅ Pass |
-| Assets, assign & return | 21 | ✅ Pass |
+| Auth & role-locked login | 16 | ✅ Pass |
+| Stock & product rules | 16 | ✅ Pass |
+| Assets, assign & return | 20 | ✅ Pass |
 | Dashboard summary | 7 | ✅ Pass |
-| Users & accounts | 42 | ✅ Pass |
+| Users & accounts | 39 | ✅ Pass |
+| **Total** | **98** | ✅ **All passing** |
 
 Live check confirmed, end to end: product → stock-in → asset created → assigned → history recorded with names → returned, plus every wrong-role and invalid-state action correctly rejected (double-assign, double-return, cross-role login).
 
-## 05. Demo sign-ins
+## 04. Demo sign-ins
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | dyadav@staunchsys.com | Demo@123 |
-| Manager | apawar@staunchsys.com | Demo@123 |
-| Employee | vchoudhary@staunchsys.com | Demo@123 |
+| Admin | dyadav@staunchsys.com | darshi123 |
+| Manager | joy@staunchsys.com | joy12345 |
 
-## 06. Open items
+Run `pytest -q` from `backend/` to reproduce the test results above.
+
+## 05. Open items
 
 > **Self-service "forgot password" is not enabled.** A working email-reset flow was built and tested but removed after discovering the outbound email provider can't yet deliver to arbitrary `@staunchsys.com` inboxes — that requires DNS records added by whoever administers the staunchsys.com domain. Until then, an admin resets passwords directly from the Users page.
+
+> **Password rules are minimal.** Only an 8-character minimum is enforced, and only on the frontend — there is no backend-side length or complexity check, and no requirement for numbers/special characters anywhere.
 
 ---
 *StockFlow — internal inventory & asset system*
