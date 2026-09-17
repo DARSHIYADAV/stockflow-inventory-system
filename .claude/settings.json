@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /d/stockflow-inventory-system_DARSHI/.claude/hooks/check_backend_edit.py"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,334 +6,134 @@ StockFlow is a company inventory and asset management system. It tracks
 general stock (products like laptops, monitors, keyboards, mice) and
 individual trackable assets (a specific laptop with a serial number,
 assigned to a specific employee). Admins and managers manage products,
-record stock in/out, and assign or return assets. Employees log in and
+record stock in/out, and assign or return assets; employees log in and
 see only the equipment currently assigned to them. Every stock change
-and every asset assignment is recorded in an audit history, so nothing
-is ever silently overwritten.
-
-**Core idea to remember:** stock quantity is never stored as a single
-mutable number — it is *derived* by summing a ledger of transactions.
-This is the single most important design decision in the project and
-the best thing to be able to explain.
-
----
+and asset assignment is recorded in an audit history, so nothing is
+ever silently overwritten. **Core idea:** stock quantity is never
+stored as a single mutable number — it is *derived* by summing a
+ledger of transactions.
 
 ## 2. Tech Stack
 
-### Backend
-- Python 3.11+
-- FastAPI — REST API framework
-- SQLAlchemy 2.0 (async) — ORM
-- Alembic — database migrations
-- Pydantic — request/response validation
-- python-jose or PyJWT — JWT handling
-- passlib (bcrypt) — password hashing
-- Pytest — testing
-- Uvicorn — ASGI server
+- Backend: Python 3.11+, FastAPI, SQLAlchemy 2.0 (async), Alembic, Pydantic, python-jose/PyJWT, passlib (bcrypt), Pytest, Uvicorn
+- Frontend: React 18 (plain JavaScript, no TypeScript), Vite, React Router, React Query, Axios, Tailwind CSS
+- Database: PostgreSQL
+- Auth: JWT (access token), RBAC (Admin/Manager vs Employee)
+- DevOps: Docker + Docker Compose, Railway/Render (backend+DB), Vercel/Netlify (frontend), GitHub Actions (optional CI)
+- Deliberately not used: WebSockets/real-time, Celery/Redis, AI/ML, chart libraries, S3/file storage, TypeScript
 
-### Frontend
-- React 18 (plain JavaScript, no TypeScript)
-- Vite — build tool/dev server
-- React Router — client-side routing
-- React Query (TanStack Query) — server state/data fetching
-- Axios — API client
-- Tailwind CSS — styling
-- React Hook Form (optional) — forms
+## 3. Commands
 
-### Database
-- PostgreSQL
+Run from `backend/` — `myenv` is the **only** interpreter with pytest/uvicorn/alembic
+installed (global Python has none of them; bare `pytest`/`uvicorn`/`alembic` will fail):
+- Tests:   `./myenv/Scripts/python.exe -m pytest -q` (requires a separate `stockflow_test` Postgres DB)
+- Server:  `./myenv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8003`
+- Migrate: `./myenv/Scripts/alembic.exe upgrade head`
 
-### Auth
-- JWT (access token)
-- Role-based access control (RBAC): Admin/Manager vs Employee
+Frontend (from `frontend/`): `npm run dev` → :5173 | `npm run build` (no lint/test tooling configured)
 
-### DevOps
-- Docker + Docker Compose (local dev: backend + Postgres)
-- Railway or Render (backend + Postgres hosting)
-- Vercel or Netlify (frontend hosting)
-- GitHub (version control)
-- GitHub Actions (optional CI)
+Ports: backend **8003**, frontend **5173**, Postgres **5434**.
+Note: `docker-compose.yml` (8000/5433) is NOT the working dev path — the local venv setup above is what's actually used.
 
-### Dev Tooling
-- Claude Code — AI pair-programmer for scaffolding/implementation/tests
-- FastAPI Swagger UI (`/docs`) — manual API testing
+## 4. Invariants & Gotchas
 
-### Deliberately Not Used (scope control)
-- No WebSockets / real-time
-- No Celery / Redis background jobs
-- No AI / ML
-- No chart library (dashboard shows numbers only)
-- No S3 / file storage
-- No TypeScript
+- Products CRUD and all `/stock` endpoints are **admin-only** (`require_admin`) — managers
+  cannot manage products or record stock, despite `docs/roles.md`.
+- Derived quantity: `get_product_quantity()` in `backend/app/routers/products.py` —
+  `SUM(stock_transactions.change_quantity)`. `Product` has no quantity column; `dashboard.py`
+  re-implements the same sum inline.
+- RBAC: `require_admin` / `require_admin_or_manager` (`backend/app/core/dependencies.py`),
+  applied per-route, not router-level.
+- Login errors are **deliberately uniform** (`401 "Incorrect email or password"`) for wrong
+  password, wrong role endpoint, or a deactivated account — this is an enumeration defense,
+  don't "fix" it.
+- Login is role-scoped: `POST /auth/login/{admin|manager|employee}`, plus a generic `POST /auth/login`.
+- Single admin is enforced at the DB level (partial unique index); first-ever registration
+  bootstraps the admin with no auth required.
+- Users are **deactivated, never deleted**. `@staunchsys.com` is enforced on managed-user schemas.
+- `pytest.ini` sets `asyncio_mode = auto` — write plain `async def test_*`, no `@pytest.mark.asyncio`.
 
----
-
-## 3. Folder Structure
+## 5. Folder Structure
 
 ```
 stockflow/
 ├── backend/
-│   ├── app/
-│   │   ├── main.py                 # FastAPI app entrypoint
-│   │   ├── config.py                # settings/env vars
-│   │   ├── database.py              # SQLAlchemy engine/session
-│   │   ├── models/
-│   │   │   ├── user.py
-│   │   │   ├── product.py
-│   │   │   ├── stock_transaction.py
-│   │   │   ├── asset.py
-│   │   │   └── asset_history.py
-│   │   ├── schemas/                 # Pydantic schemas
-│   │   │   ├── user.py
-│   │   │   ├── product.py
-│   │   │   ├── asset.py
-│   │   │   └── dashboard.py
-│   │   ├── routers/
-│   │   │   ├── auth.py
-│   │   │   ├── products.py
-│   │   │   ├── stock.py
-│   │   │   ├── assets.py
-│   │   │   ├── users.py
-│   │   │   └── dashboard.py
-│   │   ├── core/
-│   │   │   ├── security.py          # JWT + password hashing
-│   │   │   └── dependencies.py      # auth/RBAC dependencies
-│   │   └── seed.py                  # demo data seed script
-│   ├── alembic/                     # migrations
-│   ├── tests/
-│   │   ├── test_auth.py
-│   │   ├── test_stock.py
-│   │   └── test_assets.py
-│   ├── requirements.txt
-│   └── Dockerfile
-│
 ├── frontend/
-│   ├── src/
-│   │   ├── main.jsx
-│   │   ├── App.jsx
-│   │   ├── api/
-│   │   │   └── client.js            # axios instance + interceptors
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── pages/
-│   │   │   ├── Login.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Products.jsx
-│   │   │   ├── Assets.jsx
-│   │   │   ├── MyAssets.jsx
-│   │   │   └── Users.jsx
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── ProtectedRoute.jsx
-│   │   │   ├── ProductModal.jsx
-│   │   │   └── AssetModal.jsx
-│   │   └── styles/
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-│
+├── docs/
+├── tasks/
 ├── docker-compose.yml
-├── CLAUDE.md
 └── README.md
 ```
 
----
+## 6. Reference Docs
 
-## 4. Database Schema
+- Full DB schema: see [docs/schema.md](docs/schema.md)
+- Full API endpoint list: see [docs/api.md](docs/api.md)
+- Roles & permissions matrix: see [docs/roles.md](docs/roles.md)
+- Backend/frontend coding conventions: see [docs/conventions.md](docs/conventions.md)
+- Day-by-day build plan: see [docs/build-plan.md](docs/build-plan.md)
+- Local setup + deployment checklist: see [docs/deployment.md](docs/deployment.md)
+- Demo walkthrough script: see [docs/demo-script.md](docs/demo-script.md)
 
-### `users`
-| Column | Type | Notes |
-|---|---|---|
-| id | UUID/PK | |
-| name | string | |
-| email | string, unique | |
-| password_hash | string | |
-| role | enum(admin, manager, employee) | |
-| created_at | timestamp | |
+## 7. Standing Rules
 
-### `products`
-| Column | Type | Notes |
-|---|---|---|
-| id | UUID/PK | |
-| name | string | e.g. "MacBook Pro" |
-| category | string | e.g. "Laptop" |
-| supplier_name | string | plain text field, not a separate table |
-| low_stock_threshold | integer | for dashboard alerts |
-| created_at | timestamp | |
+**Task management:**
+- Before starting any non-trivial task, write a short plan/checklist to `tasks/todo.md`.
+- Work through it, checking items off as you go.
+- Give a brief summary of what changed when the task is done.
 
-*Quantity is NOT a column here — it's derived by summing `stock_transactions`.*
+**Self-improvement loop:**
+- Maintain `tasks/lessons.md`.
+- Check it for relevant past mistakes before starting a new task.
+- After finishing a task — especially after fixing a bug or being
+  corrected — append a short lesson so the same mistake isn't repeated.
 
-### `stock_transactions`
-| Column | Type | Notes |
-|---|---|---|
-| id | UUID/PK | |
-| product_id | FK → products | |
-| change_quantity | integer | positive = stock in, negative = stock out |
-| reason | string | e.g. "New purchase", "Issued to employee" |
-| actor_id | FK → users | who performed the action |
-| created_at | timestamp | |
+**Verify before done:**
+- Never mark a task complete without actually running it (tests, build,
+  lint, or a manual check) and confirming it works.
+- Don't assume code is correct just because it looks right.
+- A `PostToolUse` hook (`.claude/hooks/check_backend_edit.py`) already
+  runs backend pytest automatically after any edit under `backend/`, so
+  its result is part of your verification, not a substitute for
+  checking frontend/manual paths yourself.
 
-### `assets`
-| Column | Type | Notes |
-|---|---|---|
-| id | UUID/PK | |
-| asset_tag | string, unique | e.g. "AST-001" |
-| product_id | FK → products | |
-| serial_number | string, nullable | |
-| status | enum(available, assigned, retired) | |
-| assigned_to | FK → users, nullable | |
-| purchase_date | date, nullable | |
-| created_at | timestamp | |
+**Performance / context loading:**
+- Don't read or load more than the task needs.
+- Prefer targeted reads of specific files/functions over dumping whole directories.
+- Only open a `docs/*.md` file when the current task actually needs that detail.
 
-### `asset_history`
-| Column | Type | Notes |
-|---|---|---|
-| id | UUID/PK | |
-| asset_id | FK → assets | |
-| action | enum(assigned, returned) | |
-| employee_id | FK → users | |
-| actor_id | FK → users | who performed the assign/return |
-| note | string, nullable | |
-| created_at | timestamp | |
+**Error boundaries:**
+- In the frontend, wrap route-level and any risky components in an
+  `ErrorBoundary.jsx` component so a failure in one part of the UI
+  doesn't crash the whole app.
 
-### Relationships Summary
-- `products` 1 → many `stock_transactions`
-- `products` 1 → many `assets`
-- `assets` 1 → many `asset_history`
-- `users` 1 → many `stock_transactions` (as actor)
-- `users` 1 → many `asset_history` (as employee and/or actor)
-- `users` 1 → many `assets` (currently assigned)
+**File size limit:**
+- Keep any single file under ~200 lines.
+- If a file grows past that, split the logic into a new file/function
+  and import it back in, rather than letting one file balloon.
+- The same hook mentioned above also warns (via `systemMessage`)
+  whenever an edited file exceeds this limit.
 
----
+**Simplicity & no duplication:**
+- Prefer the simplest correct solution.
+- Don't duplicate logic — if you're about to write code that already
+  exists elsewhere (a helper, a component, a query pattern), reuse or
+  extend it instead.
+- See `docs/conventions.md` for the shared helpers, components, and
+  patterns already in this codebase (e.g. `get_*_or_404` on the
+  backend, `Modal.jsx`/`Pagination` on the frontend) before adding new ones.
 
-## 5. API Endpoints
+**Docs vs. code conflicts:**
+- `docs/*.md` and ONBOARDING.md/StockFlow_Report.md can go stale — this has
+  already happened (`docs/roles.md` once claimed managers could manage
+  products/stock; the code says admin-only).
+- If a doc and the actual code disagree, trust the code.
+- Flag the discrepancy to the user rather than silently picking one or
+  quietly "fixing" the doc without saying so.
 
-### Auth
-- `POST /auth/register` — create user (admin only, or open registration for first admin)
-- `POST /auth/login` — returns JWT access token
-- `GET /auth/me` — current user info
-
-### Products
-- `GET /products` — list all products (with derived quantity)
-- `POST /products` — create product (admin/manager)
-- `PUT /products/{id}` — edit product (admin/manager)
-- `DELETE /products/{id}` — delete product (admin)
-
-### Stock
-- `POST /stock/{product_id}/transaction` — record stock in/out (admin/manager)
-- `GET /stock/{product_id}/history` — transaction history for a product
-
-### Assets
-- `GET /assets` — list all assets (filterable by status)
-- `POST /assets` — create asset (admin/manager)
-- `POST /assets/{id}/assign` — assign to employee (admin/manager)
-- `POST /assets/{id}/return` — mark returned (admin/manager)
-- `GET /assets/{id}/history` — asset assignment history
-- `GET /assets/my` — assets assigned to the logged-in employee
-
-### Users
-- `GET /users` — list all users (admin only)
-- `PUT /users/{id}/role` — change a user's role (admin only)
-
-### Dashboard
-- `GET /dashboard/summary` — counts: total products, low-stock count, total assets, assigned assets, recent activity feed
-
----
-
-## 6. Roles & Permissions
-
-| Action | Admin | Manager | Employee |
-|---|---|---|---|
-| View dashboard | ✅ | ✅ | ❌ |
-| Manage products | ✅ | ✅ | ❌ |
-| Record stock in/out | ✅ | ✅ | ❌ |
-| Manage assets (create/assign/return) | ✅ | ✅ | ❌ |
-| View all users | ✅ | ❌ | ❌ |
-| Change user roles | ✅ | ❌ | ❌ |
-| View own assigned assets | ✅ | ✅ | ✅ |
-
----
-
-## 7. Day-by-Day Build Plan (2 Days)
-
-### Day 1 — Backend + Auth + Core CRUD
-- Hr 1: `CLAUDE.md`, repo scaffold, Docker Compose (FastAPI + Postgres), all SQLAlchemy models, first Alembic migration
-- Hr 2-3: Auth (register/login, JWT, password hashing), RBAC dependency (admin/manager vs employee)
-- Hr 4-5: Products CRUD + stock in/out endpoint (writes to `stock_transactions`, quantity derived via sum)
-- Hr 6-7: Assets CRUD + assign/return endpoints (writes to `asset_history`)
-- Hr 8: Dashboard summary endpoint (counts, low-stock query, recent activity feed)
-- **Checkpoint:** entire backend testable via `/docs`.
-
-### Day 2 — Frontend + Polish + Deploy
-- Hr 1-2: React scaffold, auth context, protected routes, API client, layout/nav
-- Hr 3: Dashboard page (stat cards + recent activity list)
-- Hr 4: Products page (table + add/edit modal + stock in/out action)
-- Hr 5: Assets page (table + assign/return action, filter by status)
-- Hr 6: Users page (admin-only) + My Assets page (employee view)
-- Hr 7: Seed script with demo data, Pytest tests (stock derivation, asset assign/return, RBAC boundaries)
-- Hr 8: Dockerize, deploy backend+DB (Railway/Render), deploy frontend (Vercel), README + demo walkthrough
-- **Checkpoint:** live URL, seeded demo data, fully demoable.
-
----
-
-## 8. Local Setup Instructions
-
-```bash
-# 1. Clone repo
-git clone <repo-url>
-cd stockflow
-
-# 2. Start backend + database
-docker compose up -d
-
-# 3. Run migrations
-docker compose exec backend alembic upgrade head
-
-# 4. Seed demo data
-docker compose exec backend python -m app.seed
-
-# 5. Install & run frontend
-cd frontend
-npm install
-npm run dev
-```
-
-- Backend API docs: `http://localhost:8000/docs`
-- Frontend: `http://localhost:5173`
-
----
-
-## 9. Deployment Checklist
-
-- [ ] Push repo to GitHub
-- [ ] Create Postgres instance on Railway/Render
-- [ ] Deploy backend (set `DATABASE_URL`, `JWT_SECRET` env vars)
-- [ ] Run migrations on deployed DB
-- [ ] Run seed script (or seed manually via `/docs`)
-- [ ] Deploy frontend to Vercel/Netlify (set API base URL env var)
-- [ ] Test full flow on live URL: login → add product → stock in → create asset → assign → dashboard reflects changes
-- [ ] Update README with live demo link
-
----
-
-## 10. Demo Script (for presenting)
-
-1. Log in as Admin → show dashboard (counts, recent activity)
-2. Add a new product (e.g., "Dell Monitor") → show it appear with 0 quantity
-3. Record stock in (+30) → quantity updates, transaction appears in history
-4. Create an asset (specific laptop, e.g. AST-005) → show it as "Available"
-5. Assign asset to an employee → status changes to "Assigned", history logged
-6. Log out, log in as that Employee → show "My Assets" page with only their equipment
-7. Log back in as Admin → return the asset → show it goes back to "Available", history shows both events
-8. Point to dashboard low-stock alert if any product is under threshold
-
----
-
-## 11. Future Improvements (mention in README, don't build now)
-
-- Postgres exclusion constraints / stronger concurrency guarantees for stock updates
-- Employee-initiated "request equipment" workflow (currently admin/manager-driven only)
-- Supplier as a full entity with purchase order tracking
-- Charts/visualizations on dashboard (Recharts)
-- Email notifications on assignment
-- Refresh token rotation for auth
+**Don't guess ports/URLs:**
+- This project has real, historical port mismatches (backend 8000 vs 8003,
+  Postgres 5433 vs 5434) across `.env`, `docker-compose.yml`, and older docs.
+- Treat `docs/deployment.md` as the single source of truth for ports/URLs.
+- Don't infer them from `.env.example`, `docker-compose.yml`, or any other
+  doc without cross-checking `docs/deployment.md` first.
