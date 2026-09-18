@@ -48,7 +48,7 @@ export default function AddUserModal({ onClose, onSubmit, submitting, error }) {
         <div>
           <label className="field-label">Password</label>
           <input
-            type="text"
+            type="password"
             required
             minLength={8}
             value={form.password}

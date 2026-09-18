@@ -1,0 +1,16 @@
+Name,Benefit
+/review,Runs an RBAC/test-coverage-focused review before committing backend changes, catching permission and docs/code mismatches before they ship.
+PostToolUse pytest hook,Automatically runs the backend test suite after every backend edit so regressions are caught immediately instead of at the next manual test run.
+File size limit hook warning,Warns as soon as an edited file exceeds ~200 lines so oversized files get split before they become hard to review or maintain.
+Task management (tasks/todo.md),Forces a written plan/checklist before non-trivial work, making progress and scope visible instead of tracked only in conversation.
+Self-improvement loop (tasks/lessons.md),Records past mistakes so the same corrected error is not repeated in a later session.
+Verify before done,Requires actually running tests/build/manual checks before marking work complete, preventing "looks right" code from being reported as done.
+File size limit (~200 lines),Keeps files small by splitting logic into new files/functions, improving readability and reducing merge/review friction.
+Error boundaries (ErrorBoundary.jsx),Contains a failure in one part of the UI so it does not crash the entire frontend app.
+Simplicity & no duplication,Prevents redundant helpers/components/queries by requiring reuse of existing patterns documented in docs/conventions.md.
+Docs vs. code conflict rule,Ensures the actual code is trusted over stale docs and any mismatch is flagged rather than silently "fixed" or ignored.
+Don't guess ports/URLs rule,Prevents wrong ports/URLs from being assumed from stale files by requiring docs/deployment.md as the single source of truth.
+Performance / context loading rule,Avoids wasted context by only reading files/docs actually needed for the current task.
+JWT secret startup guard,Fails the app loudly at startup if the default JWT secret is left unset, preventing forgeable tokens from ever reaching production.
+CORS allow-list (no wildcard),Restricts which frontend origins can call the API, preventing arbitrary sites from making authenticated cross-origin requests.
+Production reload/debug removed from Dockerfile,Stops the production server from auto-reloading or leaking debug behavior in a deployed environment.

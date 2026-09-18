@@ -40,10 +40,12 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-4 py-10">
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-xl shadow-lift">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-accent-hover text-xl shadow-[0_2px_12px_-2px_rgba(59,130,246,0.6)]">
           📦
         </div>
-        <span className="text-xl font-bold tracking-tight text-white">StockFlow</span>
+        <span className="text-xl font-bold tracking-tight text-white">
+          Stock<span className="text-accent">Flow</span>
+        </span>
       </div>
 
       <div className="w-full max-w-sm animate-scale-in rounded-3xl border border-border bg-panel p-8 shadow-modal">

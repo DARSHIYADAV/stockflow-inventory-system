@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /d/stockflow-inventory-system_DARSHI/.claude/hooks/post_edit_check.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python /d/stockflow-inventory-system_DARSHI/.claude/hooks/pre_commit_secret_check.py"
+          },
+          {
+            "type": "command",
+            "command": "python /d/stockflow-inventory-system_DARSHI/.claude/hooks/pre_push_deploy_check.py"
+          }
+        ]
+      }
+    ]
+  }
+}
