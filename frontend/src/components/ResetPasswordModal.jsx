@@ -15,7 +15,7 @@ export default function ResetPasswordModal({ targetUser, onClose, onSubmit, subm
         <div>
           <label className="field-label">New Password</label>
           <input
-            type="text"
+            type="password"
             required
             minLength={8}
             value={newPassword}

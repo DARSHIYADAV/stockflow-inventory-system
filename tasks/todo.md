@@ -1,12 +1,16 @@
-# Todo — CLAUDE.md best-practice additions + docs repair
+# Todo — Split files over 200 lines (pure refactor, no behavior change)
 
-- [x] Verify facts before documenting (ports, auth routes, seed script, demo creds)
-- [x] CLAUDE.md: add `## Commands` section (myenv-only interpreter, real ports, test DB)
-- [x] CLAUDE.md: add `## Invariants & Gotchas` section (admin-only products/stock, derived quantity, uniform login errors, asyncio_mode, deactivate-not-delete)
-- [x] CLAUDE.md: link new `docs/conventions.md`
-- [x] Create `docs/conventions.md` (backend + frontend patterns, route-duplication trap)
-- [x] Fix `docs/roles.md` — matrix contradicts code (managers are NOT allowed products/stock)
-- [x] Fix `docs/api.md` — add role-scoped logins + change-password, correct permission columns
-- [x] Fix `docs/deployment.md` — remove nonexistent seed script, correct ports
-- [x] Add demo sign-ins to `docs/demo-script.md` (dev-only note)
-- [x] Verify: pytest still 98 passed; roles.md matches `grep Depends(require_`; CLAUDE.md stays short (110 lines)
+Files over the limit (found via full-repo scan):
+- [x] backend/app/routers/assets.py (262 lines) → split into assets.py (111), asset_assignments.py (134), services/assets.py (45); pytest 98 passed
+- [x] frontend/src/pages/Users.jsx (264 lines) → Users.jsx (160) + components/UsersTable.jsx (127)
+- [x] frontend/src/pages/Assets.jsx (240 lines) → Assets.jsx (187) + components/AssetsTable.jsx (81)
+- [x] frontend/src/pages/Products.jsx (210 lines) → Products.jsx (146) + components/ProductsTable.jsx (94)
+
+Rule: split logic into new files/functions and import back in — no behavior
+change. Verify after each file: backend → pytest; frontend → npm run build
+(and manual /run check at the end).
+
+- [x] Final verification: pytest 98 passed, frontend build succeeds, all files
+      under 200 lines. Also manually launched backend+frontend, logged in as
+      admin via headless Chrome (CDP), and screenshotted Products/Assets/Users
+      — all three refactored tables render correctly with no console errors.

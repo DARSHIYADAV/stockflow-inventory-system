@@ -19,7 +19,7 @@ ledger of transactions.
 - Frontend: React 18 (plain JavaScript, no TypeScript), Vite, React Router, React Query, Axios, Tailwind CSS
 - Database: PostgreSQL
 - Auth: JWT (access token), RBAC (Admin/Manager vs Employee)
-- DevOps: Docker + Docker Compose, Railway/Render (backend+DB), Vercel/Netlify (frontend), GitHub Actions (optional CI)
+- DevOps: local Postgres install (no Docker), Railway/Render (backend+DB), Vercel/Netlify (frontend), GitHub Actions (optional CI)
 - Deliberately not used: WebSockets/real-time, Celery/Redis, AI/ML, chart libraries, S3/file storage, TypeScript
 
 ## 3. Commands
@@ -33,7 +33,8 @@ installed (global Python has none of them; bare `pytest`/`uvicorn`/`alembic` wil
 Frontend (from `frontend/`): `npm run dev` → :5173 | `npm run build` (no lint/test tooling configured)
 
 Ports: backend **8003**, frontend **5173**, Postgres **5434**.
-Note: `docker-compose.yml` (8000/5433) is NOT the working dev path — the local venv setup above is what's actually used.
+Note: Postgres runs as a local install, not via Docker — any leftover
+`docker-compose.yml` values (8000/5433) do NOT reflect the working dev path.
 
 ## 4. Invariants & Gotchas
 
@@ -61,7 +62,6 @@ stockflow/
 ├── frontend/
 ├── docs/
 ├── tasks/
-├── docker-compose.yml
 └── README.md
 ```
 
@@ -92,10 +92,18 @@ stockflow/
 - Never mark a task complete without actually running it (tests, build,
   lint, or a manual check) and confirming it works.
 - Don't assume code is correct just because it looks right.
-- A `PostToolUse` hook (`.claude/hooks/check_backend_edit.py`) already
-  runs backend pytest automatically after any edit under `backend/`, so
-  its result is part of your verification, not a substitute for
-  checking frontend/manual paths yourself.
+- A `PostToolUse` hook (`.claude/hooks/post_edit_check.py`) already
+  runs backend pytest automatically after any edit under `backend/`,
+  and runs `npm run build` automatically after any `.js`/`.jsx` edit
+  under `frontend/` — its result is part of your verification, not a
+  substitute for checking things yourself.
+- The frontend build check only catches syntax/import errors, not
+  behavior — there is still no frontend test suite, so use `/run` to
+  actually launch and check frontend changes in the browser.
+- Before committing backend changes, manually double-check RBAC
+  (`require_admin`/`require_admin_or_manager` on the right routes) and
+  test coverage, given this project's history of RBAC/docs mismatches —
+  there's no automated skill for this anymore, so this is on you.
 
 **Performance / context loading:**
 - Don't read or load more than the task needs.
@@ -133,7 +141,7 @@ stockflow/
 
 **Don't guess ports/URLs:**
 - This project has real, historical port mismatches (backend 8000 vs 8003,
-  Postgres 5433 vs 5434) across `.env`, `docker-compose.yml`, and older docs.
+  Postgres 5433 vs 5434) across `.env`, old Docker files, and older docs.
 - Treat `docs/deployment.md` as the single source of truth for ports/URLs.
-- Don't infer them from `.env.example`, `docker-compose.yml`, or any other
-  doc without cross-checking `docs/deployment.md` first.
+- Don't infer them from `.env.example` or any other doc without
+  cross-checking `docs/deployment.md` first.

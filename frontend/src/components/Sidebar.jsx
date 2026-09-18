@@ -77,6 +77,9 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 flex-col border-r border-border bg-panel/60 sm:flex">
       <nav className="flex flex-1 flex-col gap-1 p-3">
+        <p className="px-3 pb-1 pt-1 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+          Menu
+        </p>
         {visibleLinks.map((link) => {
           const Icon = link.icon
           return (
@@ -84,7 +87,7 @@ export default function Sidebar() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `sidebar-link flex items-center gap-2.5 ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`
+                `sidebar-link ${isActive ? 'sidebar-link-active' : 'sidebar-link-inactive'}`
               }
             >
               <Icon />

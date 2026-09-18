@@ -5,9 +5,10 @@ import EmptyState from '../components/EmptyState'
 import { getDashboardSummary } from '../api/dashboard'
 import { useAuth } from '../context/AuthContext'
 
-function StatCard({ label, value, labelColor, valueColor }) {
+function StatCard({ label, value, labelColor, valueColor, icon, iconBg }) {
   return (
     <div className="stat-card">
+      <div className={`stat-card-icon ${iconBg}`}>{icon}</div>
       <p className={`text-sm font-semibold ${labelColor}`}>{label}</p>
       <p className={`mt-2 text-3xl font-bold tabular-nums ${valueColor || 'text-ink-primary'}`}>
         {value}
@@ -36,7 +37,12 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight text-accent">Home</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-accent">
+          Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+        </h1>
+        <p className="mt-1 text-sm text-ink-muted">Here's what's happening across StockFlow today.</p>
+      </div>
 
       {isLoading && <Spinner label="Loading dashboard..." />}
       {isError && (
@@ -54,6 +60,8 @@ export default function Dashboard() {
                   label="Total Products"
                   value={data.total_products}
                   labelColor="text-sky-600 dark:text-sky-400"
+                  icon="📦"
+                  iconBg="bg-sky-500/15"
                 />
                 <StatCard
                   label="Low Stock"
@@ -62,6 +70,8 @@ export default function Dashboard() {
                   valueColor={
                     data.low_stock_count > 0 ? 'text-red-600 dark:text-red-400' : 'text-ink-primary'
                   }
+                  icon="⚠️"
+                  iconBg="bg-red-500/15"
                 />
               </>
             )}
@@ -69,11 +79,15 @@ export default function Dashboard() {
               label="Total Assets"
               value={data.total_assets}
               labelColor="text-violet-600 dark:text-violet-400"
+              icon="💻"
+              iconBg="bg-violet-500/15"
             />
             <StatCard
               label="Assigned Assets"
               value={data.assigned_assets_count}
               labelColor="text-amber-600 dark:text-amber-400"
+              icon="👤"
+              iconBg="bg-amber-500/15"
             />
           </div>
 

@@ -4,10 +4,7 @@ import Layout from '../components/Layout'
 import ProductModal from '../components/ProductModal'
 import StockModal from '../components/StockModal'
 import StockHistoryModal from '../components/StockHistoryModal'
-import StatusBadge from '../components/StatusBadge'
-import Spinner from '../components/Spinner'
-import EmptyState from '../components/EmptyState'
-import Pagination, { PAGE_SIZE } from '../components/Pagination'
+import ProductsTable from '../components/ProductsTable'
 import { useAuth } from '../context/AuthContext'
 import {
   createProduct,
@@ -90,79 +87,18 @@ export default function Products() {
         )}
       </div>
 
-      {isLoading && <Spinner label="Loading products..." />}
-      {isError && (
-        <p className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          Failed to load products.
-        </p>
-      )}
-
-      {products && (
-        <div className="table-shell">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border">
-              <tr>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Name</th>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Category</th>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Supplier</th>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Quantity</th>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Status</th>
-                <th className="table-head-cell text-emerald-700 dark:text-emerald-400/80">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {products.length === 0 && (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyState message="No products yet." />
-                  </td>
-                </tr>
-              )}
-              {products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((product) => {
-                const isLow = product.quantity <= product.low_stock_threshold
-                return (
-                  <tr key={product.id} className="row-hover">
-                    <td className="cell font-medium text-ink-primary">{product.name}</td>
-                    <td className="cell text-ink-secondary">{product.category}</td>
-                    <td className="cell text-ink-secondary">
-                      {product.latest_supplier_name || product.supplier_name || '—'}
-                    </td>
-                    <td className="cell tabular-nums text-ink-primary">{product.quantity}</td>
-                    <td className="cell">
-                      <StatusBadge status={isLow ? 'low' : 'ok'} label={isLow ? 'Low Stock' : 'OK'} />
-                    </td>
-                    <td className="cell">
-                      <div className="flex flex-wrap gap-2">
-                        {canManage && (
-                          <button onClick={() => setStockProduct(product)} className="btn-xs">
-                            Stock
-                          </button>
-                        )}
-                        <button onClick={() => setHistoryProduct(product)} className="btn-xs">
-                          History
-                        </button>
-                        {canManage && (
-                          <>
-                            <button onClick={() => setEditingProduct(product)} className="btn-xs">
-                              Edit
-                            </button>
-                            <button onClick={() => handleDelete(product)} className="btn-xs-danger">
-                              Delete
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          <div className="px-4 pb-4">
-            <Pagination page={page} totalItems={products.length} onPageChange={setPage} />
-          </div>
-        </div>
-      )}
+      <ProductsTable
+        products={products}
+        isLoading={isLoading}
+        isError={isError}
+        page={page}
+        onPageChange={setPage}
+        canManage={canManage}
+        onStock={setStockProduct}
+        onHistory={setHistoryProduct}
+        onEdit={setEditingProduct}
+        onDelete={handleDelete}
+      />
 
       {showAddModal && (
         <ProductModal
